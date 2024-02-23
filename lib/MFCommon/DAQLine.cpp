@@ -7,7 +7,8 @@ DAQLine<T>::DAQLine(){
     _DAQLine.setBaudRate(1000000);
     _DAQLine.setMaxMB(64);
     _DAQLine.enableMBInterrupts();
-    for(int i = 0; i < 64; i++){
+    _DAQLine.setMB(MB0,RX);
+    for(int i = 1; i < 64; i++){
         _DAQLine.setMB((FLEXCAN_MAILBOX)i,RX);
     }
     _DAQLine.setMBFilter(REJECT_ALL);
