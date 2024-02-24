@@ -1,6 +1,7 @@
 {
     "ros.distro": "humble",
     "files.associations": {
-        "*.tpp": "cpp"
+        "*.tpp": "cpp",
+        "*.tcc": "cpp"
     }
 }
