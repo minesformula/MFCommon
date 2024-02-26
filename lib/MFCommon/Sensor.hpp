@@ -2,6 +2,15 @@
 #include <FlexCAN_T4.h>
 
 #pragma once
+
+
+typedef Sensor* (*creator)(uint8_t num);
+
+struct identifier {
+    String abbr;
+    creator constructor;
+};
+
 class Sensor{
     public:
     explicit Sensor(String abbr, uint8_t num);

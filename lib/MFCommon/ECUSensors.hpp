@@ -1,4 +1,5 @@
 #include "Sensor.hpp"
+#include "SensorDefinitions.h"
 
 #pragma once
 
@@ -6,8 +7,8 @@ namespace ECU{
     //Produces RPM (pos0) and WaterTemp (pos1) data
     class EngineStatus : public Sensor {
         public:
-        EngineStatus() : Sensor("ENG", 0) {};
-        EngineStatus(uint8_t num) : Sensor("ENG", num) {};
+        EngineStatus() : Sensor(ENGINE_STATUS, 0) {};
+        EngineStatus(uint8_t num) : Sensor(ENGINE_STATUS, num) {};
 
         void query();
 
@@ -16,6 +17,7 @@ namespace ECU{
         void readFromMsg(const CAN_message_t& msg);
 
         static Sensor* create(uint8_t num){return new EngineStatus(num);}
+        static identifier getIdentity(){return { .abbr = ENGINE_STATUS, .constructor = create};}
     };
 
     void EngineStatus::query(){
@@ -25,8 +27,8 @@ namespace ECU{
     //Indicates status of fuelpump (pos0), waterpump (pos1) and fan (pos2)
     class PumpStatus: public Sensor {
         public:
-        PumpStatus() : Sensor("PMP", 0) {};
-        PumpStatus(uint8_t num) : Sensor("PMP", num) {};
+        PumpStatus() : Sensor(PUMP_STATUS, 0) {};
+        PumpStatus(uint8_t num) : Sensor(PUMP_STATUS, num) {};
 
         void query();
 
@@ -35,13 +37,14 @@ namespace ECU{
         void readFromMsg(const CAN_message_t& msg);
 
         static Sensor* create(uint8_t num){return new PumpStatus(num);}
+        static identifier getIdentity(){return { .abbr = PUMP_STATUS, .constructor = create};}
     };
 
     //pos0 is zero if neutral
     class GearStatus: public Sensor {
         public:
-        GearStatus() : Sensor("GEA", 0) {};
-        GearStatus(uint8_t num) : Sensor("GEA", num) {};
+        GearStatus() : Sensor(GEAR_STATUS, 0) {};
+        GearStatus(uint8_t num) : Sensor(GEAR_STATUS, num) {};
 
         void query();
 
@@ -50,13 +53,14 @@ namespace ECU{
         void readFromMsg(const CAN_message_t& msg);
 
         static Sensor* create(uint8_t num){return new GearStatus(num);}
+        static identifier getIdentity(){return { .abbr = GEAR_STATUS, .constructor = create};}
     };
 
     //Records Battery Voltage
     class BatteryStatus: public Sensor {
         public:
-        BatteryStatus() : Sensor("BTV", 0) {};
-        BatteryStatus(uint8_t num) : Sensor("BTV", num) {};
+        BatteryStatus() : Sensor(BATTERY_STATUS, 0) {};
+        BatteryStatus(uint8_t num) : Sensor(BATTERY_STATUS, num) {};
 
         void query();
 
@@ -65,6 +69,7 @@ namespace ECU{
         void readFromMsg(const CAN_message_t& msg);
 
         static Sensor* create(uint8_t num){return new BatteryStatus(num);}
+        static identifier getIdentity(){return { .abbr = BATTERY_STATUS, .constructor = create};}
     };
 
     CAN_message_t EngineStatus::writeToMsg(){
