@@ -81,7 +81,7 @@ namespace ECU{
             msg.buf[i] = temp[i];
         }
 
-        uint8_t* temp = static_cast<uint8_t*>(static_cast<void*>(&data[1]));
+        temp = static_cast<uint8_t*>(static_cast<void*>(&data[1]));
         for (size_t i = 0; i < sizeof(float); i++){
             msg.buf[i+4] = temp[i];
         }

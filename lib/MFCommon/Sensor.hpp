@@ -3,14 +3,6 @@
 
 #pragma once
 
-
-typedef Sensor* (*creator)(uint8_t num);
-
-struct identifier {
-    String abbr;
-    creator constructor;
-};
-
 class Sensor{
     public:
     explicit Sensor(String abbr, uint8_t num);
@@ -44,3 +36,10 @@ float Sensor::getData(){
 float Sensor::getData(uint8_t position){
     return data[position];
 }
+
+typedef Sensor* (*creator)(uint8_t num);
+
+struct identifier {
+    String abbr;
+    creator constructor;
+};
