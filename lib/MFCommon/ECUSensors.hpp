@@ -20,9 +20,6 @@ namespace ECU{
         static identifier getIdentity(){return { .abbr = ENGINE_STATUS, .constructor = create};}
     };
 
-    void EngineStatus::query(){
-        return;
-    }
 
     //Indicates status of fuelpump (pos0), waterpump (pos1) and fan (pos2)
     class PumpStatus: public Sensor {
@@ -71,6 +68,10 @@ namespace ECU{
         static Sensor* create(uint8_t num){return new BatteryStatus(num);}
         static identifier getIdentity(){return { .abbr = BATTERY_STATUS, .constructor = create};}
     };
+
+    void EngineStatus::query(){
+        return;
+    }
 
     CAN_message_t EngineStatus::writeToMsg(){
         CAN_message_t msg;
