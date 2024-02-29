@@ -17,6 +17,8 @@ class TEMPLATE : public Sensor {
 
     void readFromMsg(const CAN_message_t& msg);
 
+    String getInfo();
+
     static Sensor* create(uint8_t num){return new TEMPLATE(num);}
     static identifier getIdentity(){return { .abbr = ABBR_SENSOR_DEF, .constructor = create};}
 };
@@ -40,7 +42,15 @@ CAN_message_t TEMPLATE::writeToMsg(){
 void TEMPLATE::readFromMsg(const CAN_message_t& msg){
     //PARSE CAN_message_t INTO HUMAN READABLE DATA
 }
+
+String TEMPLATE::getInfo(){
+    //RETURNS A STRING FOR USE IN FILES
+}
 */
+struct SensorData {
+    String abbr;
+    float* data;
+};
 
 class Sensor{
     public:
@@ -51,6 +61,7 @@ class Sensor{
 
     float getData();
     float getData(uint8_t position);
+    SensorData getDataPackage(){ return {.abbr=abbr, .data=data}; };
 
     virtual CAN_message_t writeToMsg() = 0;
     virtual void readFromMsg(const CAN_message_t& msg) = 0;
@@ -60,10 +71,14 @@ class Sensor{
     uint8_t getNumber(){return num;}
     void setNumber(uint8_t newNumber){this->num = newNumber;}
 
+    virtual String getInfo() = 0;
+
     protected:
     String abbr;
     uint8_t num;
+
     float data[8];
+    String dataNames[8];
 };
 
 Sensor::Sensor(String abbr, uint8_t number){
@@ -88,5 +103,5 @@ struct identifier {
 
 struct SensorCAN {
     Sensor* sensor;
-    int CANID;
+    u_int32_t CANID;
 };

@@ -16,6 +16,8 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
+        String getInfo();
+
         static Sensor* create(uint8_t num){return new EngineStatus(num);}
         static identifier getIdentity(){return { .abbr = ENGINE_STATUS, .constructor = create};}
     };
@@ -33,6 +35,8 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
+        String getInfo();
+
         static Sensor* create(uint8_t num){return new PumpStatus(num);}
         static identifier getIdentity(){return { .abbr = PUMP_STATUS, .constructor = create};}
     };
@@ -49,6 +53,8 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
+        String getInfo();
+
         static Sensor* create(uint8_t num){return new GearStatus(num);}
         static identifier getIdentity(){return { .abbr = GEAR_STATUS, .constructor = create};}
     };
@@ -64,6 +70,8 @@ namespace ECU{
         CAN_message_t writeToMsg();
 
         void readFromMsg(const CAN_message_t& msg);
+
+        String getInfo();
 
         static Sensor* create(uint8_t num){return new BatteryStatus(num);}
         static identifier getIdentity(){return { .abbr = BATTERY_STATUS, .constructor = create};}
@@ -95,20 +103,8 @@ namespace ECU{
         data[1] = msg.buf[3] * 100;
     }
 
-    void GearStatus::query(){
-        return;
-    }
-
-    CAN_message_t GearStatus::writeToMsg(){
-        CAN_message_t msg;
-        msg.len = 1;  
-        msg.buf[0] = data[0];
-
-        return msg;
-    }
-
-    void GearStatus::readFromMsg(const CAN_message_t& msg){
-        data[0] = (msg.buf[4] & 0x10 ) << 0x10;
+    String EngineStatus::getInfo(){
+        return "Engine_RPM,WaterTemp";
     }
 
     void PumpStatus::query(){
@@ -135,6 +131,30 @@ namespace ECU{
         data[2] = msg.buf[3];
     }
 
+    String PumpStatus::getInfo(){
+        return "FuelPumpBool,WaterPumpBool,FanBool";
+    }
+
+    void GearStatus::query(){
+        return;
+    }
+
+    CAN_message_t GearStatus::writeToMsg(){
+        CAN_message_t msg;
+        msg.len = 1;  
+        msg.buf[0] = data[0];
+
+        return msg;
+    }
+
+    void GearStatus::readFromMsg(const CAN_message_t& msg){
+        data[0] = (msg.buf[4] & 0x10 ) << 0x10;
+    }
+
+    String GearStatus::getInfo(){
+        return "NeutralBool";
+    }
+
     void BatteryStatus::query(){
         return;
     }
@@ -153,5 +173,9 @@ namespace ECU{
 
     void BatteryStatus::readFromMsg(const CAN_message_t& msg){
         data[0] = float(msg.buf[2]) * 0.1216;
+    }
+
+    String BatteryStatus::getInfo(){
+        return "Battery_Voltage";
     }
 }

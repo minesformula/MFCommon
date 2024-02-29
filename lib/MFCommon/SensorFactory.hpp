@@ -13,7 +13,7 @@ class SensorFactory{
     static Sensor* createFromAbbr(String abbr, uint8_t num);
 
     private:
-    SensorFactory(){load();}
+    explicit SensorFactory(){load();}
     static void load();
 
     static identifier types[200];
