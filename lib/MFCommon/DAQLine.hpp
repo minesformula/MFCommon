@@ -21,7 +21,7 @@ namespace MF {
 
         static void begin();
 
-        static bool addSensor(int ID, const String &abbr, uint8_t num);
+        static bool addSensor(uint32_t ID, const String &abbr, uint8_t num);
 
         static void writeMsg(const CAN_message_t &msg);
         static void update();
@@ -123,13 +123,13 @@ namespace MF {
 
 
     template<CAN_DEV_TABLE T>
-    bool DAQLine<T>::addSensor(int ID, const String &abbr, uint8_t num){
-        if(_sensorNum = 200){
+    bool DAQLine<T>::addSensor(uint32_t ID, const String &abbr, uint8_t num){
+        if(_sensorNum == 200){
             Serial.println("Max Sensors Reached");
             return false;
         }
 
-        _sensor[_sensorNum]={ .CANID=ID, .sensor=MF::SensorFactory::createFromAbbr(abbr, num)};
+        _sensor[_sensorNum]={.sensor=MF::SensorFactory::createFromAbbr(abbr, num), .CANID=ID};
         _sensorNum++;
 
         return true;
