@@ -10,6 +10,7 @@ class TEMPLATE : public Sensor {
     public:
     TEMPLATE() : Sensor(ABBR_SENSOR_DEF, 0) {};
     TEMPLATE(uint8_t num) : Sensor(ABBR_SENSOR_DEF, num) {};
+    ~TEMPLATE(){};
 
     void query();
 
@@ -55,6 +56,7 @@ struct SensorData {
 class Sensor{
     public:
     explicit Sensor(String abbr, uint8_t num);
+    virtual ~Sensor(){};
 
     virtual void query() = 0;
     virtual void query(uint8_t pin){data[0]=analogRead(pin);}
@@ -85,6 +87,7 @@ Sensor::Sensor(String abbr, uint8_t number){
     this->abbr = abbr;
     this->num = number;
 }
+
 
 float Sensor::getData(){
     return data[0];

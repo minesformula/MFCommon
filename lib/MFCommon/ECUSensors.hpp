@@ -9,6 +9,7 @@ namespace ECU{
         public:
         EngineStatus() : Sensor(ENGINE_STATUS, 0) {};
         EngineStatus(uint8_t num) : Sensor(ENGINE_STATUS, num) {};
+        ~EngineStatus(){};
 
         void query();
 
@@ -28,6 +29,7 @@ namespace ECU{
         public:
         PumpStatus() : Sensor(PUMP_STATUS, 0) {};
         PumpStatus(uint8_t num) : Sensor(PUMP_STATUS, num) {};
+        ~PumpStatus(){};
 
         void query();
 
@@ -46,6 +48,7 @@ namespace ECU{
         public:
         GearStatus() : Sensor(GEAR_STATUS, 0) {};
         GearStatus(uint8_t num) : Sensor(GEAR_STATUS, num) {};
+        ~GearStatus(){};
 
         void query();
 
@@ -64,6 +67,7 @@ namespace ECU{
         public:
         BatteryStatus() : Sensor(BATTERY_STATUS, 0) {};
         BatteryStatus(uint8_t num) : Sensor(BATTERY_STATUS, num) {};
+        ~BatteryStatus(){};
 
         void query();
 
