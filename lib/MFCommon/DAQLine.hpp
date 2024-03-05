@@ -22,12 +22,16 @@ namespace MF {
         static void begin();
 
         static bool addSensor(uint32_t ID, const String &abbr, uint8_t num);
+        static bool addSensor(Sensor* sensor, uint32_t ID);
 
         static void writeMsg(const CAN_message_t &msg);
         static void update();
 
         static void SDLoggingMode();
         static void SDLoggingMode(bool set);
+
+        static void enableDynamicSensors();
+        static void enableDynamicSensors(uint32_t receiverID);
 
         private:
         static void processFrame(const CAN_message_t &msg);
@@ -43,6 +47,9 @@ namespace MF {
         static String unknownDataFile;
 
         static bool _SDMode;
+
+        static bool _dynamicMode;
+        static uint32_t _initializerID;
 
         static SensorCAN _sensor[200];
         static uint8_t _sensorNum;
@@ -65,6 +72,12 @@ namespace MF {
 
     template<CAN_DEV_TABLE T>
     bool DAQLine<T>::_SDMode;
+
+    template<CAN_DEV_TABLE T>
+    bool DAQLine<T>::_dynamicMode;
+
+    template<CAN_DEV_TABLE T>
+    uint32_t DAQLine<T>::_initializerID;
 
     template<CAN_DEV_TABLE T>
     SensorCAN DAQLine<T>::_sensor[200];
@@ -124,12 +137,17 @@ namespace MF {
 
     template<CAN_DEV_TABLE T>
     bool DAQLine<T>::addSensor(uint32_t ID, const String &abbr, uint8_t num){
+        return addSensor(MF::SensorFactory::createFromAbbr(abbr, num), ID);
+    }
+
+    template<CAN_DEV_TABLE T>
+    bool DAQLine<T>::addSensor(Sensor* Sensor, uint32_t ID){
         if(_sensorNum == 200){
             Serial.println("Max Sensors Reached");
             return false;
         }
 
-        _sensor[_sensorNum]={.sensor=MF::SensorFactory::createFromAbbr(abbr, num), .CANID=ID};
+        _sensor[_sensorNum]={.sensor=Sensor, .CANID=ID};
         _sensorNum++;
 
         return true;
@@ -173,8 +191,23 @@ namespace MF {
     }
 
     template<CAN_DEV_TABLE T>
+    void DAQLine<T>::enableDynamicSensors(){
+        _initializerID = 0;
+        _dynamicMode = true;
+    }
+
+    template<CAN_DEV_TABLE T>
+    void DAQLine<T>::enableDynamicSensors(uint32_t receiverID){
+        _initializerID = receiverID;
+        _dynamicMode = true;
+    }
+
+    template<CAN_DEV_TABLE T>
     void DAQLine<T>::processFrame(const CAN_message_t &msg){
-        if (_SDMode){
+        if (_dynamicMode && _initializerID == msg.id){
+            addSensor(SensorFactory::createFromMsg(msg), msg.data[4])
+
+        } else if (_SDMode){
             for (uint16_t i = 0; i < 200; i++){
                 if (_sensor[i].CANID == msg.id){
                     _sensor[i].sensor->readFromMsg(msg);
