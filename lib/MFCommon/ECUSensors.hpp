@@ -17,10 +17,11 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        String getInfo();
+        static String getInfo();
 
         static Sensor* create(uint8_t num){return new EngineStatus(num);}
-        static identifier getIdentity(){return { .abbr = ENGINE_STATUS, .constructor = create};}
+        static identifier getIdentity()
+            {return { .abbr = ENGINE_STATUS, .constructor = create, .info = getInfo()};}
     };
 
 
@@ -37,10 +38,11 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        String getInfo();
+        static String getInfo();
 
         static Sensor* create(uint8_t num){return new PumpStatus(num);}
-        static identifier getIdentity(){return { .abbr = PUMP_STATUS, .constructor = create};}
+        static identifier getIdentity()
+            {return { .abbr = PUMP_STATUS, .constructor = create, .info = getInfo()};}
     };
 
     //pos0 is zero if neutral
@@ -56,10 +58,11 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        String getInfo();
+        static String getInfo();
 
         static Sensor* create(uint8_t num){return new GearStatus(num);}
-        static identifier getIdentity(){return { .abbr = GEAR_STATUS, .constructor = create};}
+        static identifier getIdentity()
+            {return { .abbr = GEAR_STATUS, .constructor = create, .info = getInfo()};}
     };
 
     //Records Battery Voltage
@@ -75,10 +78,11 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        String getInfo();
+        static String getInfo();
 
         static Sensor* create(uint8_t num){return new BatteryStatus(num);}
-        static identifier getIdentity(){return { .abbr = BATTERY_STATUS, .constructor = create};}
+        static identifier getIdentity()
+            {return { .abbr = BATTERY_STATUS, .constructor = create, .info = getInfo()};}
     };
 
     void EngineStatus::query(){

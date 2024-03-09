@@ -20,10 +20,11 @@ class TEMPLATE : public Sensor {
 
     void readFromMsg(const CAN_message_t& msg);
 
-    String getInfo();
+    static String getInfo();
 
     static Sensor* create(uint8_t num){return new TEMPLATE(num);}
-    static identifier getIdentity(){return { .abbr = ABBR_SENSOR_DEF, .constructor = create};}
+    static identifier getIdentity()
+        {return { .abbr = ABBR_SENSOR_DEF, .constructor = create, .info = getInfo()};}
 };
 
 void TEMPLATE::query(){
@@ -75,8 +76,6 @@ class Sensor{
     uint8_t getNumber(){return num;}
     void setNumber(uint8_t newNumber){this->num = newNumber;}
 
-    virtual String getInfo() = 0;
-
     protected:
     String abbr;
     uint8_t num;
@@ -106,11 +105,15 @@ float Sensor::getData(uint8_t position){
 
 typedef Sensor* (*creator)(uint8_t num);
 
+//Identifier class to allow easy identification of Sensors. 
+//Includes their abbreviation, constructor and comma delimited position names as "info"
 struct identifier {
     String abbr;
     creator constructor;
+    String info;
 };
 
+//Unifies a sensor and it's respective canID
 struct SensorCAN {
     Sensor* sensor;
     u_int32_t CANID;
