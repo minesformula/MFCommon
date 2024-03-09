@@ -3,6 +3,8 @@
 
 #pragma once
 
+#define DATA_SIZE 8
+
 /*
 //Template class for easy copy/pasting
 
@@ -79,8 +81,8 @@ class Sensor{
     String abbr;
     uint8_t num;
 
-    float data[8];
-    String dataNames[8];
+    float data[DATA_SIZE];
+    String dataNames[DATA_SIZE];
 };
 
 Sensor::Sensor(String abbr, uint8_t number){
@@ -94,6 +96,11 @@ float Sensor::getData(){
 }
 
 float Sensor::getData(uint8_t position){
+    if (position > DATA_SIZE){
+        Serial.print("Overrun, failed to getData");
+        return -1;
+    }
+
     return data[position];
 }
 

@@ -33,6 +33,8 @@ namespace MF {
         static void enableDynamicSensors();
         static void enableDynamicSensors(uint32_t receiverID);
 
+        static String getReadOut();
+
         private:
         static void processFrame(const CAN_message_t &msg);
 
@@ -147,6 +149,8 @@ namespace MF {
             return false;
         }
 
+        Serial.print("Creating Sensor at: ");
+        Serial.println(ID);
         _sensor[_sensorNum]={.sensor=Sensor, .CANID=ID};
         _sensorNum++;
 
@@ -203,33 +207,68 @@ namespace MF {
     }
 
     template<CAN_DEV_TABLE T>
+    String DAQLine<T>::getReadOut(){
+        String retval = "";
+
+        for(uint16_t i = 0; i < _sensorNum; i++){
+            SensorData temp = _sensor[i].sensor->getDataPackage();
+
+            retval.concat(temp.abbr);
+            retval.concat(",");
+            for (uint8_t j = 0; j < DATA_SIZE; j++){
+                char* buf;
+                dtostrf(temp.data[j], 4, 3, buf);
+                retval.concat(buf[0]);
+                retval.concat(buf[1]);
+                retval.concat(buf[2]);
+                retval.concat(buf[3]);
+
+                if (j == 7){
+                    retval.concat("\n");
+                } else {
+                    retval.concat(",");
+                }
+            }
+        }
+
+        return retval;
+    }
+
+    template<CAN_DEV_TABLE T>
     void DAQLine<T>::processFrame(const CAN_message_t &msg){
         if (_dynamicMode && _initializerID == msg.id){
-            addSensor(SensorFactory::createFromMsg(msg), msg.data[4])
+            Serial.println(addSensor(SensorFactory::createFromMsg(msg), msg.buf[4]));
 
         } else if (_SDMode){
-            for (uint16_t i = 0; i < 200; i++){
+            bool notFound = true;
+            Serial.println();
+            Serial.println(msg.id);
+            for (uint16_t i = 0; i < _sensorNum; i++){
+                Serial.println(i);
+                Serial.println(_sensor[i].CANID);
+
                 if (_sensor[i].CANID == msg.id){
                     _sensor[i].sensor->readFromMsg(msg);
+
                     SensorData temp = _sensor[i].sensor->getDataPackage();
                     uint8_t* data = reinterpret_cast<uint8_t*>(reinterpret_cast<void*>(temp.data));
                     const char* c_str = temp.abbr.c_str();
 
                     writeBytes(knownDataFile, temp.abbr.length(), (uint8_t*) &c_str);
-                    writeBytes(knownDataFile, sizeof(float)*8, data);
-                    return;
+                    writeBytes(knownDataFile, sizeof(float)*DATA_SIZE, data);
+                    notFound = false;
                 }
             }
-
-            uint8_t* id = reinterpret_cast<uint8_t*>(reinterpret_cast<void*>(msg.id));
-            writeBytes(unknownDataFile, sizeof(msg.id), (uint8_t*) &id);
-            writeBytes(unknownDataFile, 8, (uint8_t*) &msg.buf);
+            if (notFound){
+                uint8_t* id = reinterpret_cast<uint8_t*>(reinterpret_cast<void*>(msg.id));
+                writeBytes(unknownDataFile, sizeof(msg.id), (uint8_t*) &id);
+                writeBytes(unknownDataFile, 8, (uint8_t*) &msg.buf);
+            }
 
         } else {
-            for (uint16_t i = 0; i < 200; i++){
+            for (uint16_t i = 0; i < _sensorNum; i++){
                 if (_sensor[i].CANID == msg.id){
                     _sensor[i].sensor->readFromMsg(msg);
-                    return;
                 }
             }
         }

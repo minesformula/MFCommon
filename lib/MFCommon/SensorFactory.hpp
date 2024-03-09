@@ -31,9 +31,9 @@ namespace MF{
     }
 
     Sensor* SensorFactory::createFromMsg(const CAN_message_t &msg){
-        String abbr = msg.buf[0];
-        abbr.concat(msg.buf[1]);
-        abbr.concat(msg.buf[2]);
+        String abbr = char(msg.buf[0]);
+        abbr.concat(char(msg.buf[1]));
+        abbr.concat(char(msg.buf[2]));
 
         return createFromAbbr(abbr, msg.buf[3]);
     }
