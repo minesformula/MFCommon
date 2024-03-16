@@ -4,9 +4,12 @@
 #include <SensorDefinitions.h>
 
 MF::DAQLine<CAN1> ECULine;
+int prevTime = 0;
 
 void setup() {
-  Serial.begin(9600); delay(400);
+  Serial.begin(9600); 
+  Serial2.begin(57600);
+
   ECULine.begin();
   ECULine.SDLoggingMode();
   ECULine.enableDynamicSensors();
@@ -15,4 +18,9 @@ void setup() {
 
 void loop() {
   ECULine.update();
+  ECULine.sendReadOut(Serial2);
+
+  if (millis()-prevTime > 5000){
+    MF::SensorFactory::sendReadOut(Serial2);
+  }
 }
