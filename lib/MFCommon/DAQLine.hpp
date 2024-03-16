@@ -12,6 +12,13 @@
 
 namespace MF {
     typedef void (*_callback)(const CAN_message_t &msg);
+
+    union {
+    int integer;
+    float floatingPoint;
+    uint8_t bytes[4];
+    }converter;
+
     template <CAN_DEV_TABLE T>
     class DAQLine {
         public:
@@ -214,9 +221,9 @@ namespace MF {
             serial.print(temp.abbr);
             serial.print(",");
             for (uint8_t j = 0; j < DATA_SIZE; j++){
-                uint8_t * bytes = (uint8_t) * temp.data[j];
+                converter.floatingPoint = temp.data[j];
                 for (uint8_t c = 0; c < 4; c++){
-                    serial.write(bytes[c]);
+                    serial.write(converter.bytes[c]);
                 }
             }
             serial.println("");
@@ -229,23 +236,20 @@ namespace MF {
         if (_dynamicMode && _initializerID == msg.id){
             Serial.println(addSensor(SensorFactory::createFromMsg(msg), msg.buf[4]));
 
-        } else if (_SDMode){
+        } else {
             bool notFound = true;
-            Serial.println();
-            Serial.println(msg.id);
-            for (uint16_t i = 0; i < _sensorNum; i++){
-                Serial.println(i);
-                Serial.println(_sensor[i].CANID);
 
+            for (uint16_t i = 0; i < _sensorNum; i++){
                 if (_sensor[i].CANID == msg.id){
                     _sensor[i].sensor->readFromMsg(msg);
+                    if (_SDMode){
+                        SensorData temp = _sensor[i].sensor->getDataPackage();
+                        uint8_t* data = reinterpret_cast<uint8_t*>(reinterpret_cast<void*>(temp.data));
+                        const char* c_str = temp.abbr.c_str();
 
-                    SensorData temp = _sensor[i].sensor->getDataPackage();
-                    uint8_t* data = reinterpret_cast<uint8_t*>(reinterpret_cast<void*>(temp.data));
-                    const char* c_str = temp.abbr.c_str();
-
-                    writeBytes(knownDataFile, temp.abbr.length(), (uint8_t*) &c_str);
-                    writeBytes(knownDataFile, sizeof(float)*DATA_SIZE, data);
+                        writeBytes(knownDataFile, temp.abbr.length(), (uint8_t*) &c_str);
+                        writeBytes(knownDataFile, sizeof(float)*DATA_SIZE, data);
+                    }
                     notFound = false;
                 }
             }
@@ -253,13 +257,6 @@ namespace MF {
                 uint8_t* id = reinterpret_cast<uint8_t*>(reinterpret_cast<void*>(msg.id));
                 writeBytes(unknownDataFile, sizeof(msg.id), (uint8_t*) &id);
                 writeBytes(unknownDataFile, 8, (uint8_t*) &msg.buf);
-            }
-
-        } else {
-            for (uint16_t i = 0; i < _sensorNum; i++){
-                if (_sensor[i].CANID == msg.id){
-                    _sensor[i].sensor->readFromMsg(msg);
-                }
             }
         }
     }
