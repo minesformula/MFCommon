@@ -3,7 +3,7 @@
 #include <ECUSensors.hpp>
 #include <SensorDefinitions.h>
 
-MF::DAQLine<CAN1> ECULine;
+MF::DAQLine<CAN2> ECULine;
 int prevTime = 0;
 
 void setup() {
@@ -20,7 +20,8 @@ void loop() {
   ECULine.update();
   ECULine.sendReadOut(Serial2);
 
-  if (millis()-prevTime > 5000){
+  if (millis()-prevTime > 50000){
     MF::SensorFactory::sendReadOut(Serial2);
   }
+  delay(1);
 }

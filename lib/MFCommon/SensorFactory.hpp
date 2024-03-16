@@ -20,11 +20,11 @@ namespace MF{
         private:
         explicit SensorFactory(){load();}
 
-        static identifier types[200];
+        static identifier types[50];
         static uint8_t numTypes;
     };
 
-    identifier SensorFactory::types[200];
+    identifier SensorFactory::types[50];
     uint8_t SensorFactory::numTypes;
 
     void SensorFactory::load(){
@@ -56,11 +56,12 @@ namespace MF{
 
     void SensorFactory::sendReadOut(HardwareSerial &serial){
         for (uint8_t i = 0; i < numTypes; i++){
-            serial.print("0,");
-            serial.print(types[i].abbr);
-            serial.print(",");
-            serial.print(types[i].info);
-            serial.print("\n");
+            String message = "0,";
+            message.append(types[i].abbr);
+            message.append(",");
+            message.append(types[i].info);
+            serial.println(message);
+            serial.flush();
         }
     }
 }

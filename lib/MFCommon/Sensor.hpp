@@ -53,6 +53,7 @@ String TEMPLATE::getInfo(){
 */
 struct SensorData {
     String abbr;
+    int sensorNum;
     float* data;
 };
 
@@ -66,7 +67,7 @@ class Sensor{
 
     float getData();
     float getData(uint8_t position);
-    SensorData getDataPackage(){ return {.abbr=abbr, .data=data}; };
+    SensorData getDataPackage(){ return {.abbr=abbr, .sensorNum=num, .data=data}; };
 
     virtual CAN_message_t writeToMsg() = 0;
     virtual void readFromMsg(const CAN_message_t& msg) = 0;
@@ -87,6 +88,10 @@ class Sensor{
 Sensor::Sensor(String abbr, uint8_t number){
     this->abbr = abbr;
     this->num = number;
+    
+    for (int i = 0; i < DATA_SIZE; i++){
+        this->data[i] = 0;
+    }
 }
 
 

@@ -37,10 +37,13 @@ namespace MF {
         static void SDLoggingMode();
         static void SDLoggingMode(bool set);
 
+        static void enableLiveTelemetry(HardwareSerial &radio);
+
         static void enableDynamicSensors();
         static void enableDynamicSensors(uint32_t receiverID);
 
         static void sendReadOut(HardwareSerial &serial);
+        static void sendReadOut(HardwareSerial *serial);
 
         private:
         static void processFrame(const CAN_message_t &msg);
@@ -55,7 +58,10 @@ namespace MF {
         static String knownDataFile;
         static String unknownDataFile;
 
+        static HardwareSerial* _radio;
+
         static bool _SDMode;
+        static bool _liveMode;
 
         static bool _dynamicMode;
         static uint32_t _initializerID;
@@ -80,10 +86,16 @@ namespace MF {
     String DAQLine<T>::unknownDataFile;
 
     template<CAN_DEV_TABLE T>
-    bool DAQLine<T>::_SDMode;
+    HardwareSerial* DAQLine<T>::_radio;
 
     template<CAN_DEV_TABLE T>
-    bool DAQLine<T>::_dynamicMode;
+    bool DAQLine<T>::_SDMode = false;
+
+    template<CAN_DEV_TABLE T>
+    bool DAQLine<T>::_liveMode = false;
+
+    template<CAN_DEV_TABLE T>
+    bool DAQLine<T>::_dynamicMode = false;
 
     template<CAN_DEV_TABLE T>
     uint32_t DAQLine<T>::_initializerID;
@@ -202,6 +214,12 @@ namespace MF {
     }
 
     template<CAN_DEV_TABLE T>
+    void DAQLine<T>::enableLiveTelemetry(HardwareSerial &radio){
+        _radio = &radio;
+        _liveMode = true;
+    }
+
+    template<CAN_DEV_TABLE T>
     void DAQLine<T>::enableDynamicSensors(){
         _initializerID = 0;
         _dynamicMode = true;
@@ -217,17 +235,51 @@ namespace MF {
     void DAQLine<T>::sendReadOut(HardwareSerial &serial){
         for(uint16_t i = 0; i < _sensorNum; i++){
             SensorData temp = _sensor[i].sensor->getDataPackage();
+
             serial.print("1,");
             serial.print(temp.abbr);
             serial.print(",");
+            serial.print(temp.sensorNum);
+            serial.print(",");
             for (uint8_t j = 0; j < DATA_SIZE; j++){
                 converter.floatingPoint = temp.data[j];
-                for (uint8_t c = 0; c < 4; c++){
-                    serial.write(converter.bytes[c]);
+                serial.print("0x");
+                for (uint8_t a = 0; a < sizeof(float); a++){
+                    serial.print(converter.bytes[a], HEX);
+                }
+                if (j == DATA_SIZE-1){
+                    serial.println();
+                } else {
+                    serial.print(",");
                 }
             }
-            serial.println("");
             serial.flush();
+        }
+    }
+
+    template<CAN_DEV_TABLE T>
+    void DAQLine<T>::sendReadOut(HardwareSerial *serial){
+        for(uint16_t i = 0; i < _sensorNum; i++){
+            SensorData temp = _sensor[i].sensor->getDataPackage();
+
+            serial->print("1,");
+            serial->print(temp.abbr);
+            serial->print(",");
+            serial->print(temp.sensorNum);
+            serial->print(",");
+            for (uint8_t j = 0; j < DATA_SIZE; j++){
+                converter.floatingPoint = temp.data[j];
+                serial->print("0x");
+                for (uint8_t a = 0; a < sizeof(float); a++){
+                    serial->print(converter.bytes[a], HEX);
+                }
+                if (j == DATA_SIZE-1){
+                    serial->println();
+                } else {
+                    serial->print(",");
+                }
+            }
+            serial->flush();
         }
     }
 
@@ -237,11 +289,11 @@ namespace MF {
             Serial.println(addSensor(SensorFactory::createFromMsg(msg), msg.buf[4]));
 
         } else {
-            bool notFound = true;
 
             for (uint16_t i = 0; i < _sensorNum; i++){
                 if (_sensor[i].CANID == msg.id){
                     _sensor[i].sensor->readFromMsg(msg);
+
                     if (_SDMode){
                         SensorData temp = _sensor[i].sensor->getDataPackage();
                         uint8_t* data = reinterpret_cast<uint8_t*>(reinterpret_cast<void*>(temp.data));
@@ -250,12 +302,18 @@ namespace MF {
                         writeBytes(knownDataFile, temp.abbr.length(), (uint8_t*) &c_str);
                         writeBytes(knownDataFile, sizeof(float)*DATA_SIZE, data);
                     }
-                    notFound = false;
+
+                    if (_liveMode){
+                        sendReadOut(_radio);
+                    }
+
+                    return;
                 }
             }
-            if (notFound){
-                uint8_t* id = reinterpret_cast<uint8_t*>(reinterpret_cast<void*>(msg.id));
-                writeBytes(unknownDataFile, sizeof(msg.id), (uint8_t*) &id);
+            
+            if (_SDMode){
+                converter.integer = msg.id;
+                writeBytes(unknownDataFile, sizeof(msg.id), (uint8_t*) converter.bytes);
                 writeBytes(unknownDataFile, 8, (uint8_t*) &msg.buf);
             }
         }
