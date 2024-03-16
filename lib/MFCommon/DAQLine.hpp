@@ -33,7 +33,7 @@ namespace MF {
         static void enableDynamicSensors();
         static void enableDynamicSensors(uint32_t receiverID);
 
-        static String getReadOut();
+        static void sendReadOut(HardwareSerial &serial);
 
         private:
         static void processFrame(const CAN_message_t &msg);
@@ -207,31 +207,21 @@ namespace MF {
     }
 
     template<CAN_DEV_TABLE T>
-    String DAQLine<T>::getReadOut(){
-        String retval = "";
-
+    void DAQLine<T>::sendReadOut(HardwareSerial &serial){
         for(uint16_t i = 0; i < _sensorNum; i++){
             SensorData temp = _sensor[i].sensor->getDataPackage();
-
-            retval.concat(temp.abbr);
-            retval.concat(",");
+            serial.print("1,");
+            serial.print(temp.abbr);
+            serial.print(",");
             for (uint8_t j = 0; j < DATA_SIZE; j++){
-                char* buf;
-                dtostrf(temp.data[j], 4, 3, buf);
-                retval.concat(buf[0]);
-                retval.concat(buf[1]);
-                retval.concat(buf[2]);
-                retval.concat(buf[3]);
-
-                if (j == 7){
-                    retval.concat("\n");
-                } else {
-                    retval.concat(",");
+                uint8_t * bytes = (uint8_t) * temp.data[j];
+                for (uint8_t c = 0; c < 4; c++){
+                    serial.write(bytes[c]);
                 }
             }
+            serial.println("");
+            serial.flush();
         }
-
-        return retval;
     }
 
     template<CAN_DEV_TABLE T>

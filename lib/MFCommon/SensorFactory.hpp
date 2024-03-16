@@ -15,7 +15,7 @@ namespace MF{
         static Sensor* createFromMsg(const CAN_message_t &msg);
         static Sensor* createFromAbbr(String abbr, uint8_t num);
 
-        static String getReadOut();
+        static void sendReadOut(HardwareSerial &serial);
 
         private:
         explicit SensorFactory(){load();}
@@ -54,16 +54,13 @@ namespace MF{
         return nullptr;
     }
 
-    String SensorFactory::getReadOut(){
-        String retval = "";
-
+    void SensorFactory::sendReadOut(HardwareSerial &serial){
         for (uint8_t i = 0; i < numTypes; i++){
-            retval.append(types[i].abbr);
-            retval.append(",");
-            retval.append(types[i].info);
-            retval.append("\n");
+            serial.print("0,");
+            serial.print(types[i].abbr);
+            serial.print(",");
+            serial.print(types[i].info);
+            serial.print("\n");
         }
-
-        return retval;
     }
 }
