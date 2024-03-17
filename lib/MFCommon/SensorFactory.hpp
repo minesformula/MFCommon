@@ -61,7 +61,6 @@ namespace MF{
             message.append(",");
             message.append(types[i].info);
             serial.println(message);
-            serial.flush();
         }
     }
 }

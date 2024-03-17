@@ -43,7 +43,7 @@ namespace MF {
         static void enableDynamicSensors(uint32_t receiverID);
 
         static void sendReadOut(HardwareSerial &serial);
-        static void sendReadOut(HardwareSerial *serial);
+        static void sendReadOut(HardwareSerial *serial, Sensor* sensor);
 
         private:
         static void processFrame(const CAN_message_t &msg);
@@ -242,45 +242,35 @@ namespace MF {
             serial.print(temp.sensorNum);
             serial.print(",");
             for (uint8_t j = 0; j < DATA_SIZE; j++){
-                converter.floatingPoint = temp.data[j];
-                serial.print("0x");
-                for (uint8_t a = 0; a < sizeof(float); a++){
-                    serial.print(converter.bytes[a], HEX);
-                }
-                if (j == DATA_SIZE-1){
-                    serial.println();
-                } else {
-                    serial.print(",");
-                }
+            serial.print(temp.data[j], 5);
+            if (j == DATA_SIZE-1){
+                serial.println();
+            } else {
+                serial.print(",");
             }
+        }
             serial.flush();
         }
     }
 
     template<CAN_DEV_TABLE T>
-    void DAQLine<T>::sendReadOut(HardwareSerial *serial){
-        for(uint16_t i = 0; i < _sensorNum; i++){
-            SensorData temp = _sensor[i].sensor->getDataPackage();
+    void DAQLine<T>::sendReadOut(HardwareSerial *serial, Sensor* sensor){
+        SensorData temp = sensor->getDataPackage();
 
-            serial->print("1,");
-            serial->print(temp.abbr);
-            serial->print(",");
-            serial->print(temp.sensorNum);
-            serial->print(",");
-            for (uint8_t j = 0; j < DATA_SIZE; j++){
-                converter.floatingPoint = temp.data[j];
-                serial->print("0x");
-                for (uint8_t a = 0; a < sizeof(float); a++){
-                    serial->print(converter.bytes[a], HEX);
-                }
-                if (j == DATA_SIZE-1){
-                    serial->println();
-                } else {
-                    serial->print(",");
-                }
+        serial->print("1,");
+        serial->print(temp.abbr);
+        serial->print(",");
+        serial->print(temp.sensorNum);
+        serial->print(",");
+        for (uint8_t j = 0; j < DATA_SIZE; j++){
+            serial->print(temp.data[j], 5);
+            if (j == DATA_SIZE-1){
+                serial->println();
+            } else {
+                serial->print(",");
             }
-            serial->flush();
         }
+        serial->flush();
     }
 
     template<CAN_DEV_TABLE T>
@@ -304,7 +294,7 @@ namespace MF {
                     }
 
                     if (_liveMode){
-                        sendReadOut(_radio);
+                        sendReadOut(_radio, _sensor[i].sensor);
                     }
 
                     return;
