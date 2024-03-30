@@ -153,6 +153,14 @@ namespace MF {
         _DAQLine.enableFIFO();
         _DAQLine.enableFIFOInterrupt();
         _DAQLine.onReceive(processFrame);
+
+        if (T == CAN1){
+            _CANNum = "CAN1";
+        } else if (T == CAN2){
+            _CANNum = "CAN2";
+        } else if (T == CAN3){
+            _CANNum = "CAN3";
+        } 
     }
 
 
@@ -186,28 +194,37 @@ namespace MF {
         _DAQLine.events();
     }
 
-    //TODO: Add datetime filenaming when SDLoggingMode is enabled
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::SDLoggingMode(){
-        String temp = String(year()) + "_" + String(month()) + 
-            "_" + String(day()) + "/" + String(hour()) + ":" + String(minute()) + ":" + String(second());
+        String date = String(year()) + "_" + String(month()) + "_" + String(day());
+        String time = String(hour()) + ":" + String(minute()) + ":" + String(second());
 
+        SD.begin(BUILTIN_SDCARD);
+        SD.mkdir(date.c_str());
+        knownDataFile = date + "/" + time + "_SensorInfo.dat";
+        unknownDataFile = date + "/" + time + "_" + _CANNum + "_" + "Msgs.dat";
 
-        SD.mkdir(temp.c_str());
-        knownDataFile = temp + "/SensorInfo.dat";
-        unknownDataFile = temp + "/" + _CANNum + "Msgs.dat";
+        Serial.println("Starting SDLogging to files");
+        Serial.println(knownDataFile);
+        Serial.println(unknownDataFile);
 
         _SDMode = true;
     }
 
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::SDLoggingMode(bool set){
-        if (set){String temp = String(year()) + "_" + String(month()) + 
-            "_" + String(day()) + "/" + String(hour()) + ":" + String(minute()) + ":" + String(second());
+        if (set){
+            String date = String(year()) + "_" + String(month()) + "_" + String(day());
+            String time = String(hour()) + ":" + String(minute()) + ":" + String(second());
 
-        SD.mkdir(temp.c_str());
-        knownDataFile = temp + "/SensorInfo.dat";
-        unknownDataFile = temp + "/" + _CANNum + "Msgs.dat";
+            SD.begin(BUILTIN_SDCARD);
+            SD.mkdir(date.c_str());
+            knownDataFile = date + "/" + time + "SensorInfo.dat";
+            unknownDataFile = date + "/" + time + "_" + _CANNum + "_" + "Msgs.dat";
+
+            Serial.println("Starting SDLogging to files");
+            Serial.println(knownDataFile);
+            Serial.println(unknownDataFile);
         }
 
         _SDMode = set;

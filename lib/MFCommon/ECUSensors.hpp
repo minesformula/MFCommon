@@ -180,6 +180,7 @@ namespace ECU{
     }
 
     void BatteryStatus::readFromMsg(const CAN_message_t& msg){
+        if (msg.buf[0] != 48) return;
         data[0] = float(msg.buf[2]) * 0.1216;
     }
 
