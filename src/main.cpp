@@ -9,7 +9,6 @@ int prevTime = 0;
 void setup() {
   Serial.begin(9600); 
   Serial2.begin(57600);
-  delay(5000);
 
   DAQLine.begin();
   DAQLine.SDLoggingMode();
@@ -28,5 +27,4 @@ void loop() {
     MF::SensorFactory::sendReadOut(Serial2);
     prevTime = millis();
   }
-  delay(1);
 }

@@ -48,15 +48,15 @@ namespace MF {
         private:
         static void processFrame(const CAN_message_t &msg);
 
-        static void writeBytes(const String &filename, int size, uint8_t* buffer);
+        static void writeBytes(File &filename, int size, uint8_t* buffer);
 
         static FlexCAN_T4<T, RX_SIZE_256, TX_SIZE_16> _DAQLine;
         static String _CANNum;
 
         static int _baudrate;
 
-        static String knownDataFile;
-        static String unknownDataFile;
+        static File knownDataFile;
+        static File unknownDataFile;
 
         static HardwareSerial* _radio;
 
@@ -80,10 +80,10 @@ namespace MF {
     int DAQLine<T>::_baudrate;
 
     template<CAN_DEV_TABLE T>
-    String DAQLine<T>::knownDataFile;
+    File DAQLine<T>::knownDataFile;
 
     template<CAN_DEV_TABLE T>
-    String DAQLine<T>::unknownDataFile;
+    File DAQLine<T>::unknownDataFile;
 
     template<CAN_DEV_TABLE T>
     HardwareSerial* DAQLine<T>::_radio;
@@ -201,12 +201,10 @@ namespace MF {
 
         SD.begin(BUILTIN_SDCARD);
         SD.mkdir(date.c_str());
-        knownDataFile = date + "/" + time + "_SensorInfo.dat";
-        unknownDataFile = date + "/" + time + "_" + _CANNum + "_" + "Msgs.dat";
+        knownDataFile = SD.open(String(date + "/" + time + "_SensorInfo.dat").c_str());
+        unknownDataFile = SD.open(String(date + "/" + time + "_" + _CANNum + "_" + "Msgs.dat").c_str());
 
-        Serial.println("Starting SDLogging to files");
-        Serial.println(knownDataFile);
-        Serial.println(unknownDataFile);
+        Serial.println("Starting SDLogging");
 
         _SDMode = true;
     }
@@ -219,12 +217,10 @@ namespace MF {
 
             SD.begin(BUILTIN_SDCARD);
             SD.mkdir(date.c_str());
-            knownDataFile = date + "/" + time + "SensorInfo.dat";
-            unknownDataFile = date + "/" + time + "_" + _CANNum + "_" + "Msgs.dat";
+            knownDataFile = SD.open(String(date + "/" + time + "_SensorInfo.dat").c_str());
+            unknownDataFile = SD.open(String(date + "/" + time + "_" + _CANNum + "_" + "Msgs.dat").c_str());
 
             Serial.println("Starting SDLogging to files");
-            Serial.println(knownDataFile);
-            Serial.println(unknownDataFile);
         }
 
         _SDMode = set;
@@ -327,9 +323,8 @@ namespace MF {
     }
 
     template<CAN_DEV_TABLE T>
-    void DAQLine<T>::writeBytes(const String &filename, int size, uint8_t* buffer){
-        File temp = SD.open(filename.c_str(), FILE_WRITE);
-        
+    void DAQLine<T>::writeBytes(File &file, int size, uint8_t* buffer){
+
         for (int i = 0; i < size; i++){
             temp.write(buffer[i]);
         }

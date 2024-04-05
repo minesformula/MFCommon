@@ -108,7 +108,7 @@ namespace ECU{
 
     void EngineStatus::readFromMsg(const CAN_message_t& msg){
         data[0] = msg.buf[0] * 100;
-        data[1] = msg.buf[3] * 100;
+        data[1] = msg.buf[3];
     }
 
     String EngineStatus::getInfo(){
