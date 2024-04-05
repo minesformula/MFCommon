@@ -1,7 +1,9 @@
 #include <Arduino.h>
-#include <FlexCAN_T4.h>
-#include <Sensor.hpp>
-#include <ECUSensors.hpp>
+
+#include "Sensor.hpp"
+#include "ECUSensors.hpp"
+
+#include "thirdParty/FlexCAN_T4/FlexCAN_T4.h"
 
 #pragma once
 

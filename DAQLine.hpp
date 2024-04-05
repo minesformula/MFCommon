@@ -1,12 +1,12 @@
 #include <Arduino.h>
-#include <FlexCAN_T4.h>
-#include <Sensor.hpp>
-#include <SensorFactory.hpp>
-
 #include <SD.h>
 #include <SPI.h>
 
-#include <TimeLib.h>
+#include "thirdParty/FlexCAN_T4/FlexCAN_T4.h"
+#include "Sensor.hpp"
+#include "SensorFactory.hpp"
+
+#include "thirdParty/Time-1.6.1/TimeLib.h"
 
 #pragma once
 
@@ -249,7 +249,7 @@ namespace MF {
         for(uint16_t i = 0; i < _sensorNum; i++){
             SensorData temp = _sensor[i].sensor->getDataPackage();
 
-            serial.print("1,");
+            serial.print("1,"); //Sends messages as '1' when sending data
             serial.print(temp.abbr);
             serial.print(",");
             serial.print(temp.sensorNum);
@@ -270,7 +270,7 @@ namespace MF {
     void DAQLine<T>::sendReadOut(HardwareSerial *serial, Sensor* sensor){
         SensorData temp = sensor->getDataPackage();
 
-        serial->print("1,");
+        serial->print("1,"); //Sends messages as '1' when sending data
         serial->print(temp.abbr);
         serial->print(",");
         serial->print(temp.sensorNum);
