@@ -15,6 +15,7 @@ class TEMPLATE : public Sensor {
     ~TEMPLATE(){};
 
     void query();
+    void query(uint8_t pin);
 
     CAN_message_t writeToMsg();
 
@@ -26,10 +27,6 @@ class TEMPLATE : public Sensor {
     static identifier getIdentity()
         {return { .abbr = ABBR_SENSOR_DEF, .constructor = create, .info = getInfo()};}
 };
-
-void TEMPLATE::query(){
-    //INSTRUCTIONS TO QUERY SENSOR
-}
 
 void TEMPLATE::query(){
     //INSTRUCTIONS TO QUERY SENSOR

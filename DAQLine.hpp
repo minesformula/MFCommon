@@ -331,7 +331,7 @@ namespace MF {
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::processFrame(const CAN_message_t &msg){
         if (_dynamicMode && _initializerID == msg.id){
-            addSensor(SensorFactory::createFromMsg(msg), msg.buf[4])
+            addSensor(SensorFactory::createFromMsg(msg), msg.buf[4]);
 
         } else {
 
@@ -373,9 +373,9 @@ namespace MF {
     void DAQLine<T>::writeBytes(File &file, int size, uint8_t* buffer){
 
         for (int i = 0; i < size; i++){
-            temp.write(buffer[i]);
+            file.write(buffer[i]);
         }
 
-        temp.close();
+        file.close();
     }
 }
