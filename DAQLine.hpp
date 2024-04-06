@@ -163,12 +163,22 @@ namespace MF {
         } 
     }
 
-
+    /// @brief Creates a sensor at a given CANID
+    /// @tparam T CANLine
+    /// @param ID CANID for sensor creation
+    /// @param abbr Corresponding Sensor Abbreviation
+    /// @param num Sensor Number for identification
+    /// @return Boolean indicating success or failure
     template<CAN_DEV_TABLE T>
     bool DAQLine<T>::addSensor(uint32_t ID, const String &abbr, uint8_t num){
         return addSensor(MF::SensorFactory::createFromAbbr(abbr, num), ID);
     }
 
+    /// @brief Creates a sensor at a given CANID
+    /// @tparam T CANLine
+    /// @param Sensor Pointer to a sensor instance
+    /// @param ID CANID for sensor creation
+    /// @return Boolean indicating success or failure
     template<CAN_DEV_TABLE T>
     bool DAQLine<T>::addSensor(Sensor* Sensor, uint32_t ID){
         if(_sensorNum == 200){
@@ -184,16 +194,23 @@ namespace MF {
         return true;
     }
 
+    /// @brief Send a message over associated CAN line
+    /// @tparam T CANLine
+    /// @param msg Flexcan_T4 msg to be shipped over CAN
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::writeMsg(const CAN_message_t &msg){
         _DAQLine.write(msg);
     }
 
+    /// @brief Check CAN line for new messages
+    /// @tparam T CANLine
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::update(){
         _DAQLine.events();
     }
 
+    /// @brief Enable DAQ style SDCard logging. By default creates files with the current date and time.
+    /// @tparam T CANLine
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::SDLoggingMode(){
         String date = String(year()) + "_" + String(month()) + "_" + String(day());
@@ -209,6 +226,9 @@ namespace MF {
         _SDMode = true;
     }
 
+    /// @brief Toggle DAQ style SDCard logging. By default creates files with the current date and time.
+    /// @tparam T CANLine
+    /// @param set Boolean for enabling/disabling SDLogging Mode
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::SDLoggingMode(bool set){
         if (set){
@@ -226,30 +246,43 @@ namespace MF {
         _SDMode = set;
     }
 
+    /// @brief Enables live telemetry transmissions
+    /// @tparam T CANLine
+    /// @param radio Serial pins to write transmissions to
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::enableLiveTelemetry(HardwareSerial &radio){
         _radio = &radio;
         _liveMode = true;
     }
 
+    /// @brief Enables dynamic sensor allocation allowing sensors to be created from CAN ID 0 messages
+    /// @tparam T CANLine
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::enableDynamicSensors(){
         _initializerID = 0;
         _dynamicMode = true;
     }
 
+    /// @brief Enables dynamic sensor allocation allowing sensors to be created messages with a certain CAN ID
+    /// @tparam T CANLine
+    /// @param receiverID CAN ID to use for dynamic sensor allocation
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::enableDynamicSensors(uint32_t receiverID){
         _initializerID = receiverID;
         _dynamicMode = true;
     }
 
+    /// @brief Prints every datapoint currently available to serial with comma delimiters
+    /// @tparam T CANLine
+    /// @param serial Serial to transmit data through
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::sendReadOut(HardwareSerial &serial){
         for(uint16_t i = 0; i < _sensorNum; i++){
             SensorData temp = _sensor[i].sensor->getDataPackage();
 
-            serial.print("1,"); //Sends messages as '1' when sending data
+            //Sends messages as '1' when sending data.
+            //Live telemetry mode sends a 0 when transmitting sensor info allowing late connection
+            serial.print("1,");
             serial.print(temp.abbr);
             serial.print(",");
             serial.print(temp.sensorNum);
@@ -266,11 +299,17 @@ namespace MF {
         }
     }
 
+    /// @brief Sends data from a specified sensor through a specified serial line
+    /// @tparam T CANLine
+    /// @param serial Serial to transmit data through
+    /// @param sensor Pointer to sensor to transmit data from
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::sendReadOut(HardwareSerial *serial, Sensor* sensor){
         SensorData temp = sensor->getDataPackage();
 
-        serial->print("1,"); //Sends messages as '1' when sending data
+        //Sends messages as '1' when sending data.
+        //Live telemetry mode sends a 0 when transmitting sensor info allowing late connection
+        serial->print("1,");
         serial->print(temp.abbr);
         serial->print(",");
         serial->print(temp.sensorNum);
@@ -286,10 +325,13 @@ namespace MF {
         serial->flush();
     }
 
+    /// @brief CAN callback for processing received messages
+    /// @tparam T CANLine
+    /// @param msg Message to process
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::processFrame(const CAN_message_t &msg){
         if (_dynamicMode && _initializerID == msg.id){
-            Serial.println(addSensor(SensorFactory::createFromMsg(msg), msg.buf[4]));
+            addSensor(SensorFactory::createFromMsg(msg), msg.buf[4])
 
         } else {
 
@@ -322,6 +364,11 @@ namespace MF {
         }
     }
 
+    /// @brief Write given bytes buffer to a given file
+    /// @tparam T CANLine
+    /// @param file SDCard File to be written to
+    /// @param size Buffer size
+    /// @param buffer Buffer containing bytes to write to the file
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::writeBytes(File &file, int size, uint8_t* buffer){
 
