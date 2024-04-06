@@ -125,6 +125,50 @@ namespace ECU{
             {return { .abbr = ENGINE_RUNTIME, .constructor = create, .info = getInfo()};}
     };
 
+    class Brake_Status : public Sensor {
+    public:
+    Brake_Status() : Sensor(BRAKE_STATUS, 0) {};
+    Brake_Status(uint8_t num) : Sensor(BRAKE_STATUS, num) {};
+    ~Brake_Status(){};
+
+    void query();
+    void query(uint8_t pin);
+
+    CAN_message_t writeToMsg();
+
+    void readFromMsg(const CAN_message_t& msg);
+
+    static String getInfo();
+
+    static Sensor* create(uint8_t num){return new Brake_Status(num);}
+    static identifier getIdentity()
+        {return { .abbr = BRAKE_STATUS, .constructor = create, .info = getInfo()};}
+    };
+
+    void Brake_Status::query(){
+        return;
+    }
+
+    void Brake_Status::query(uint8_t pin){
+        return;
+    }
+
+    //TODO:Write Function Implementation;
+    CAN_message_t Brake_Status::writeToMsg(){
+        //PARSE DATA To CAN_message_t
+    }
+
+    void Brake_Status::readFromMsg(const CAN_message_t& msg){
+        data[0] = msg.buf[0] << 8 | msg.buf[1];
+        data[1] = msg.buf[2] << 8 | msg.buf[3];
+        data[2] = msg.buf[4] << 8 | msg.buf[5];
+        data[3] = msg.buf[6] << 8 | msg.buf[7];
+    }
+
+    String Brake_Status::getInfo(){
+        return "Engine_Speed(RPM),Throttle_Position(%),Brake_Pressure_Front(bar),Brake_Pressure_Rear(bar)";
+    }
+
     CAN_message_t EngineStatus::writeToMsg(){
         CAN_message_t msg;
         msg.len = 8;

@@ -6,3 +6,4 @@
 #define GEAR_STATUS "GEA"
 #define BATTERY_STATUS "BTV"
 #define THROTTLE_STATUS "THR"
+#define BRAKE_STATUS "EBR"
