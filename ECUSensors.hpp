@@ -12,6 +12,7 @@ namespace ECU{
         ~EngineStatus(){};
 
         void query();
+        void query(uint8_t pin);
 
         CAN_message_t writeToMsg();
 
@@ -33,6 +34,7 @@ namespace ECU{
         ~PumpStatus(){};
 
         void query();
+        void query(uint8_t pin);
 
         CAN_message_t writeToMsg();
 
@@ -53,6 +55,7 @@ namespace ECU{
         ~GearStatus(){};
 
         void query();
+        void query(uint8_t pin);
 
         CAN_message_t writeToMsg();
 
@@ -73,6 +76,7 @@ namespace ECU{
         ~BatteryStatus(){};
 
         void query();
+        void query(uint8_t pin);
 
         CAN_message_t writeToMsg();
 
@@ -125,11 +129,11 @@ namespace ECU{
             {return { .abbr = ENGINE_RUNTIME, .constructor = create, .info = getInfo()};}
     };
 
-    class Brake_Status : public Sensor {
+    class BrakeStatus : public Sensor {
     public:
-    Brake_Status() : Sensor(BRAKE_STATUS, 0) {};
-    Brake_Status(uint8_t num) : Sensor(BRAKE_STATUS, num) {};
-    ~Brake_Status(){};
+    BrakeStatus() : Sensor(BRAKE_STATUS, 0) {};
+    BrakeStatus(uint8_t num) : Sensor(BRAKE_STATUS, num) {};
+    ~BrakeStatus(){};
 
     void query();
     void query(uint8_t pin);
@@ -140,33 +144,37 @@ namespace ECU{
 
     static String getInfo();
 
-    static Sensor* create(uint8_t num){return new Brake_Status(num);}
+    static Sensor* create(uint8_t num){return new BrakeStatus(num);}
     static identifier getIdentity()
         {return { .abbr = BRAKE_STATUS, .constructor = create, .info = getInfo()};}
     };
 
-    void Brake_Status::query(){
+    class EngineTemp : public Sensor {
+        public:
+        EngineTemp() : Sensor(ENGINE_TEMPERATURE, 0) {};
+        EngineTemp(uint8_t num) : Sensor(ENGINE_TEMPERATURE, num) {};
+        ~EngineTemp(){};
+
+        void query();
+        void query(uint8_t pin);
+
+        CAN_message_t writeToMsg();
+
+        void readFromMsg(const CAN_message_t& msg);
+
+        static String getInfo();
+
+        static Sensor* create(uint8_t num){return new EngineTemp(num);}
+        static identifier getIdentity()
+            {return { .abbr = ENGINE_TEMPERATURE, .constructor = create, .info = getInfo()};}
+    };
+
+    void EngineStatus::query(){
         return;
     }
 
-    void Brake_Status::query(uint8_t pin){
+    void EngineStatus::query(uint8_t pin){
         return;
-    }
-
-    //TODO:Write Function Implementation;
-    CAN_message_t Brake_Status::writeToMsg(){
-        //PARSE DATA To CAN_message_t
-    }
-
-    void Brake_Status::readFromMsg(const CAN_message_t& msg){
-        data[0] = msg.buf[0] << 8 | msg.buf[1];
-        data[1] = msg.buf[2] << 8 | msg.buf[3];
-        data[2] = msg.buf[4] << 8 | msg.buf[5];
-        data[3] = msg.buf[6] << 8 | msg.buf[7];
-    }
-
-    String Brake_Status::getInfo(){
-        return "Engine_Speed(RPM),Throttle_Position(%),Brake_Pressure_Front(bar),Brake_Pressure_Rear(bar)";
     }
 
     CAN_message_t EngineStatus::writeToMsg(){
@@ -198,11 +206,14 @@ namespace ECU{
     }
 
     String EngineStatus::getInfo(){
-        return "Engine_RPM(RPM),Throttle_Pos(%),Vehicle_Speed(kmh),Water_Temp(C),Oil_Temp(C),"
-            "Fuel_Temp(C),Transmission_Temp(C),Differential_Temp(C)";
+        return "Engine_RPM(RPM),Throttle_Pos(%),Vehicle_Speed(kmh),Water_Temp(C),Oil_Temp(C),Fuel_Temp(C),Transmission_Temp(C),Differential_Temp(C)";
     }
 
     void PumpStatus::query(){
+        return;
+    }
+
+    void PumpStatus::query(uint8_t pin){
         return;
     }
 
@@ -234,6 +245,10 @@ namespace ECU{
         return;
     }
 
+    void GearStatus::query(uint8_t pin){
+        return;
+    }
+
     CAN_message_t GearStatus::writeToMsg(){
         CAN_message_t msg;
         msg.len = 1;  
@@ -251,6 +266,10 @@ namespace ECU{
     }
 
     void BatteryStatus::query(){
+        return;
+    }
+
+    void BatteryStatus::query(uint8_t pin){
         return;
     }
 
@@ -298,9 +317,9 @@ namespace ECU{
 
     void ThrottleStatus::readFromMsg(const CAN_message_t& msg){
         data[0] = msg.buf[0] << 8 | msg.buf[1];
-        data[1] = msg.buf[2] << 8 | msg.buf[3];
-        data[2] = msg.buf[4] << 8 | msg.buf[5];
-        data[3] = msg.buf[6] << 8 | msg.buf[7];
+        data[1] = float(msg.buf[2] << 8 | msg.buf[3])/10;
+        data[2] = float(reinterpret_cast<int>(msg.buf[4] << 8 | msg.buf[5]))/10;
+        data[3] = float(msg.buf[6] << 8 | msg.buf[7])/10;
     }
 
     String ThrottleStatus::getInfo(){
@@ -317,7 +336,7 @@ namespace ECU{
 
     //TODO: Write this function
     CAN_message_t EngineRuntimeStats::writeToMsg(){
-        //PARSE DATA To CAN_message_t
+        return CAN_message_t();
     }
 
     void EngineRuntimeStats::readFromMsg(const CAN_message_t& msg){
@@ -328,13 +347,61 @@ namespace ECU{
         data[4] = msg.buf[4];
         data[5] = (msg.buf[5] & 0b1100) >> 2;
         data[6] = msg.buf[5] & 0b0011;
-        data[7] = msg.buf[6] << 8 | msg.buf[7];
+        data[7] = float(msg.buf[6] << 8 | msg.buf[7])/68.95;
 
     }
 
     String EngineRuntimeStats::getInfo(){
-        return "Ignition_Output_Cut_Count,Fuel_Output_Count,Ignition_Output_Cut_Average(%),"
-        "Fuel_Output_Cut_Average(%),Cylinder1_Primary_Output_Pulse_Width(mS),Ignition_Cut_State,"
-        "Ignition_Timing_State,Engine_Oil_Pressure(kPa)";
+        return "Ignition_Output_Cut_Count,Fuel_Output_Count,Ignition_Output_Cut_Average(%),Fuel_Output_Cut_Average(%),Cylinder1_Primary_Output_Pulse_Width(mS),Ignition_Cut_State,Ignition_Timing_State,Engine_Oil_Pressure(PSI)";
+    }
+
+    void BrakeStatus::query(){
+        return;
+    }
+
+    void BrakeStatus::query(uint8_t pin){
+        return;
+    }
+
+    //TODO:Write Function Implementation;
+    CAN_message_t BrakeStatus::writeToMsg(){
+        return CAN_message_t();
+    }
+
+    void BrakeStatus::readFromMsg(const CAN_message_t& msg){
+        data[0] = float(reinterpret_cast<int>(msg.buf[0] << 8 | msg.buf[1]))/100;
+        data[1] = float(reinterpret_cast<int>(msg.buf[2] << 8 | msg.buf[3]))/100;
+        data[2] = float(reinterpret_cast<int>(msg.buf[4] << 8 | msg.buf[5]))/10;
+        data[3] = float(reinterpret_cast<int>(msg.buf[6] << 8 | msg.buf[7]))/100;
+    }
+
+    String BrakeStatus::getInfo(){
+        return "Brake_Pressure_Front(bar),Brake_Pressure_Rear(bar),Coolant_Pressure(kPa),Power_Steering(bar)";
+    }
+
+    void EngineTemp::query(){
+        return;
+    }
+
+    void EngineTemp::query(uint8_t pin){
+        return;
+    }
+
+    CAN_message_t EngineTemp::writeToMsg(){
+        return CAN_message_t();
+    }
+
+    void EngineTemp::readFromMsg(const CAN_message_t& msg){
+        data[0] = int(msg.buf[0]) - 40;
+        data[1] = int(msg.buf[1]) - 40;
+        data[2] = int(msg.buf[2]) - 40;
+        data[3] = int(msg.buf[3]) - 40;
+        data[4] = int(msg.buf[4]) - 40;
+        data[5] = float(msg.buf[5])/10;
+        data[6] = float(msg.buf[6] << 8 | msg.buf[7])/100;
+    }
+
+    String EngineTemp::getInfo(){
+        return "Coolant_Temperature(C),Engine_Oil_Temperature(C),Fuel Temperature(C),Ambient Temperature(C),Airbox_Temperature(C),ECU_Battery_Voltage(V),Fuel_Used(L)";
     }
 }

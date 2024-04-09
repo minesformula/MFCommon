@@ -3,10 +3,11 @@
 #include <SPI.h>
 
 #include "thirdParty/FlexCAN_T4/FlexCAN_T4.h"
+#include "MFCommon.h"
 #include "Sensor.hpp"
 #include "SensorFactory.hpp"
 
-#include "thirdParty/Time-1.6.1/TimeLib.h"
+#include <TimeLib.h>
 
 #pragma once
 
@@ -37,6 +38,8 @@ namespace MF {
         static void SDLoggingMode();
         static void SDLoggingMode(bool set);
 
+        static void flushSD();
+
         static void enableLiveTelemetry(HardwareSerial &radio);
 
         static void enableDynamicSensors();
@@ -54,6 +57,9 @@ namespace MF {
         static String _CANNum;
 
         static int _baudrate;
+
+        static char knownFilename[23];
+        static char unknownFilename[23];
 
         static File knownDataFile;
         static File unknownDataFile;
@@ -78,6 +84,12 @@ namespace MF {
 
     template<CAN_DEV_TABLE T>
     int DAQLine<T>::_baudrate;
+
+    template<CAN_DEV_TABLE T>
+    char DAQLine<T>::knownFilename[23];
+
+    template<CAN_DEV_TABLE T>
+    char DAQLine<T>::unknownFilename[23];
 
     template<CAN_DEV_TABLE T>
     File DAQLine<T>::knownDataFile;
@@ -213,17 +225,7 @@ namespace MF {
     /// @tparam T CANLine
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::SDLoggingMode(){
-        String date = String(year()) + "_" + String(month()) + "_" + String(day());
-        String time = String(hour()) + ":" + String(minute()) + ":" + String(second());
-
-        SD.begin(BUILTIN_SDCARD);
-        SD.mkdir(date.c_str());
-        knownDataFile = SD.open(String(date + "/" + time + "_SensorInfo.dat").c_str());
-        unknownDataFile = SD.open(String(date + "/" + time + "_" + _CANNum + "_" + "Msgs.dat").c_str());
-
-        Serial.println("Starting SDLogging");
-
-        _SDMode = true;
+        SDLoggingMode(true);
     }
 
     /// @brief Toggle DAQ style SDCard logging. By default creates files with the current date and time.
@@ -232,18 +234,50 @@ namespace MF {
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::SDLoggingMode(bool set){
         if (set){
-            String date = String(year()) + "_" + String(month()) + "_" + String(day());
-            String time = String(hour()) + ":" + String(minute()) + ":" + String(second());
 
             SD.begin(BUILTIN_SDCARD);
-            SD.mkdir(date.c_str());
-            knownDataFile = SD.open(String(date + "/" + time + "_SensorInfo.dat").c_str());
-            unknownDataFile = SD.open(String(date + "/" + time + "_" + _CANNum + "_" + "Msgs.dat").c_str());
+            char typeFile[23];
+            sprintf(typeFile, "typeFile%s.txt", VERSION);
+            File temp = SD.open(typeFile);
+            temp.println(SensorFactory::getReadout());
 
-            Serial.println("Starting SDLogging to files");
+            int i = 0;
+            sprintf(knownFilename, "logFile0.data");
+            sprintf(unknownFilename, "CANFile0.data");
+
+            while (SD.exists(knownFilename)){
+                i++;
+
+                sprintf(knownFilename, "logFile%d.data", i);
+                sprintf(unknownFilename, "CANFile%d.data", i);
+            }
+        
+
+            knownDataFile = SD.open(knownFilename, FILE_WRITE);
+            unknownDataFile = SD.open(unknownFilename, FILE_WRITE);
+
+            knownDataFile.println("Ver" + String(VERSION) + " Known Data:");
+            unknownDataFile.println("Ver" + String(VERSION) + " Unknown Data:");
+
+            knownDataFile.close();
+            unknownDataFile.close();
+
+            knownDataFile = SD.open(knownFilename, FILE_WRITE);
+            unknownDataFile = SD.open(unknownFilename, FILE_WRITE);
+
+            Serial.println("Starting SDLogging");
         }
 
         _SDMode = set;
+    }
+
+    template<CAN_DEV_TABLE T>
+    void DAQLine<T>::flushSD(){
+        knownDataFile.close();
+        unknownDataFile.close();
+
+        knownDataFile = SD.open(knownFilename, FILE_WRITE);
+        unknownDataFile = SD.open(unknownFilename, FILE_WRITE);
     }
 
     /// @brief Enables live telemetry transmissions
@@ -330,6 +364,26 @@ namespace MF {
     /// @param msg Message to process
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::processFrame(const CAN_message_t &msg){
+        Serial.println("Received: " + msg.id);
+
+        if (_SDMode){
+
+            unknownDataFile.print(millis());
+            unknownDataFile.print(",");
+            unknownDataFile.print(msg.id);
+            unknownDataFile.print(",");
+
+            for(size_t dataPos = 0; dataPos < 8; dataPos++){
+                unknownDataFile.print(msg.buf[dataPos]);
+
+                if(dataPos != 7){
+                    unknownDataFile.print(",");
+                }
+            }
+
+            unknownDataFile.println();
+        }
+
         if (_dynamicMode && _initializerID == msg.id){
             addSensor(SensorFactory::createFromMsg(msg), msg.buf[4]);
 
@@ -341,11 +395,23 @@ namespace MF {
 
                     if (_SDMode){
                         SensorData temp = _sensor[i].sensor->getDataPackage();
-                        uint8_t* data = reinterpret_cast<uint8_t*>(reinterpret_cast<void*>(temp.data));
-                        const char* c_str = temp.abbr.c_str();
+                        
+                        knownDataFile.print(millis());
+                        knownDataFile.print(",");
+                        knownDataFile.print(temp.abbr);
+                        knownDataFile.print(",");
+                        knownDataFile.print(temp.sensorNum);
+                        knownDataFile.print(",");
+    
+                        for (size_t dataPos = 0; dataPos < DATA_SIZE; dataPos++){
+                            knownDataFile.print(temp.data[dataPos]);
 
-                        writeBytes(knownDataFile, temp.abbr.length(), (uint8_t*) &c_str);
-                        writeBytes(knownDataFile, sizeof(float)*DATA_SIZE, data);
+                            if (dataPos != DATA_SIZE-1){
+                                knownDataFile.print(",");
+                            }
+                        }
+
+                        knownDataFile.println();
                     }
 
                     if (_liveMode){
@@ -354,12 +420,6 @@ namespace MF {
 
                     return;
                 }
-            }
-            
-            if (_SDMode){
-                converter.integer = msg.id;
-                writeBytes(unknownDataFile, sizeof(msg.id), (uint8_t*) converter.bytes);
-                writeBytes(unknownDataFile, 8, (uint8_t*) &msg.buf);
             }
         }
     }
@@ -376,6 +436,6 @@ namespace MF {
             file.write(buffer[i]);
         }
 
-        file.close();
+        file.println();
     }
 }

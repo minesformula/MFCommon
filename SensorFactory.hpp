@@ -17,6 +17,7 @@ namespace MF{
         static Sensor* createFromMsg(const CAN_message_t &msg);
         static Sensor* createFromAbbr(String abbr, uint8_t num);
 
+        static String getMessage();
         static void sendReadOut(HardwareSerial &serial);
 
         private:
@@ -34,8 +35,12 @@ namespace MF{
         types[1] = ECU::GearStatus::getIdentity();
         types[2] = ECU::PumpStatus::getIdentity();
         types[3] = ECU::BatteryStatus::getIdentity();
+        types[4] = ECU::EngineRuntimeStats::getIdentity();
+        types[5] = ECU::ThrottleStatus::getIdentity();
+        types[6] = ECU::BrakeStatus::getIdentity();
+        types[7] = ECU::EngineTemp::getIdentity();
 
-        numTypes = 4;
+        numTypes = 8;
     }
 
     Sensor* SensorFactory::createFromMsg(const CAN_message_t &msg){
@@ -56,13 +61,18 @@ namespace MF{
         return nullptr;
     }
 
-    void SensorFactory::sendReadOut(HardwareSerial &serial){
+    String SensorFactory::getMessage(){
+        String message = "0,";
         for (uint8_t i = 0; i < numTypes; i++){
-            String message = "0,";
             message.append(types[i].abbr);
             message.append(",");
             message.append(types[i].info);
-            serial.println(message);
         }
+        return message;
+    }
+
+    void SensorFactory::sendReadOut(HardwareSerial &serial){
+        serial.println(getMessage());
+        serial.flush();
     }
 }
