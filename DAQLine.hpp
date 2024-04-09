@@ -239,7 +239,7 @@ namespace MF {
             char typeFile[23];
             sprintf(typeFile, "typeFile%s.txt", VERSION);
             File temp = SD.open(typeFile);
-            temp.println(SensorFactory::getReadout());
+            temp.println(SensorFactory::getReadOut());
 
             int i = 0;
             sprintf(knownFilename, "logFile0.data");
