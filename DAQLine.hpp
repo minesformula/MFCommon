@@ -236,28 +236,31 @@ namespace MF {
         if (set){
 
             SD.begin(BUILTIN_SDCARD);
-            char typeFile[23];
-            sprintf(typeFile, "typeFile%s.txt", VERSION);
-            File temp = SD.open(typeFile);
-            temp.println(SensorFactory::getReadOut());
+
+            if (!SD.exists(VERSION)){
+                File temp = SD.open(VERSION, FILE_WRITE);
+                temp.println("Ver" + String(VERSION) + " Config Data:");
+                temp.println(SensorFactory::getReadOut());
+                temp.close();
+            }
 
             int i = 0;
             sprintf(knownFilename, "logFile0.data");
-            sprintf(unknownFilename, "CANFile0.data");
+            sprintf(unknownFilename, "%sFile0.data", _CANNum.c_str());
 
             while (SD.exists(knownFilename)){
                 i++;
 
                 sprintf(knownFilename, "logFile%d.data", i);
-                sprintf(unknownFilename, "CANFile%d.data", i);
+                sprintf(unknownFilename, "%sFile%d.data", _CANNum.c_str(), i);
             }
         
 
             knownDataFile = SD.open(knownFilename, FILE_WRITE);
             unknownDataFile = SD.open(unknownFilename, FILE_WRITE);
 
-            knownDataFile.println("Ver" + String(VERSION) + " Known Data:");
-            unknownDataFile.println("Ver" + String(VERSION) + " Unknown Data:");
+            knownDataFile.println("Ver:" + String(VERSION) + " Known Data:");
+            unknownDataFile.println("CAN: " + _CANNum + " Ver: " + String(VERSION) + " Unknown Data:");
 
             knownDataFile.close();
             unknownDataFile.close();

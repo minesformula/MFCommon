@@ -67,6 +67,11 @@ namespace MF{
             message.append(types[i].abbr);
             message.append(",");
             message.append(types[i].info);
+            message.append('\n');
+
+            if (numTypes-1 != i){
+                message.append("0,");
+            }
         }
         return message;
     }
