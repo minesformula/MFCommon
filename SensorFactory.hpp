@@ -2,6 +2,7 @@
 
 #include "Sensor.hpp"
 #include "ECUSensors.hpp"
+#include "MotionSensors.hpp"
 
 #include "thirdParty/FlexCAN_T4/FlexCAN_T4.h"
 
@@ -39,8 +40,10 @@ namespace MF{
         types[5] = ECU::ThrottleStatus::getIdentity();
         types[6] = ECU::BrakeStatus::getIdentity();
         types[7] = ECU::EngineTemp::getIdentity();
+        types[8] = Motion::Accelerometer::getIdentity();
+        types[9] = Motion::Gyroscope::getIdentity();
 
-        numTypes = 8;
+        numTypes = 10;
     }
 
     Sensor* SensorFactory::createFromMsg(const CAN_message_t &msg){
