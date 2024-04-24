@@ -107,7 +107,7 @@ namespace MF {
     uint32_t DAQLine<T>::_initializerID;
 
     template<CAN_DEV_TABLE T>
-    SensorCAN DAQLine<T>::_sensor[200];
+    SensorCAN DAQLine<T>::_sensor[20];
 
     template<CAN_DEV_TABLE T>
     uint8_t DAQLine<T>::_sensorNum;
