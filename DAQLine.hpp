@@ -66,7 +66,7 @@ namespace MF {
         static bool _dynamicMode;
         static uint32_t _initializerID;
 
-        static SensorCAN _sensor[200];
+        static SensorCAN _sensor[20];
         static uint8_t _sensorNum;
     };
 
