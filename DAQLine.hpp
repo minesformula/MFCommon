@@ -198,7 +198,8 @@ namespace MF {
             return false;
         }
 
-        Serial.print("Creating Sensor at: ");
+        Serial.print(_CANNum);
+        Serial.print(": Creating Sensor at: ");
         Serial.println(ID);
         _sensor[_sensorNum]={.sensor=Sensor, .CANID=ID};
         _sensorNum++;
@@ -219,13 +220,14 @@ namespace MF {
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::update(){
         _DAQLine.events();
+        //Serial2.println("Updating");
     }
 
     /// @brief Enable DAQ style SDCard logging. By default creates files with the current date and time.
     /// @tparam T CANLine
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::SDLoggingMode(){
-        SDLoggingMode(true);
+        _SDMode = true;
     }
 
     /// @brief Toggle DAQ style SDCard logging. By default creates files with the current date and time.
@@ -235,8 +237,6 @@ namespace MF {
     void DAQLine<T>::SDLoggingMode(bool set){
         if (set){
 
-            SD.begin(BUILTIN_SDCARD);
-
             if (!SD.exists(VERSION)){
                 File temp = SD.open(VERSION, FILE_WRITE);
                 temp.println("Ver" + String(VERSION) + " Config Data:");
@@ -245,13 +245,13 @@ namespace MF {
             }
 
             int i = 0;
-            sprintf(knownFilename, "logFile0.data");
+            sprintf(knownFilename, "%slogFile0.data", _CANNum.c_str());
             sprintf(unknownFilename, "%sFile0.data", _CANNum.c_str());
 
             while (SD.exists(knownFilename)){
                 i++;
 
-                sprintf(knownFilename, "logFile%d.data", i);
+                sprintf(knownFilename, "%slogFile%d.data", _CANNum.c_str(), i);
                 sprintf(unknownFilename, "%sFile%d.data", _CANNum.c_str(), i);
             }
         
@@ -268,7 +268,8 @@ namespace MF {
             knownDataFile = SD.open(knownFilename, FILE_WRITE);
             unknownDataFile = SD.open(unknownFilename, FILE_WRITE);
 
-            Serial.println("Starting SDLogging");
+            Serial.print(_CANNum);
+            Serial.println(": Starting SDLogging");
         }
 
         _SDMode = set;
@@ -276,11 +277,8 @@ namespace MF {
 
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::flushSD(){
-        knownDataFile.close();
-        unknownDataFile.close();
-
-        knownDataFile = SD.open(knownFilename, FILE_WRITE);
-        unknownDataFile = SD.open(unknownFilename, FILE_WRITE);
+        knownDataFile.flush();
+        unknownDataFile.flush();
     }
 
     /// @brief Enables live telemetry transmissions
@@ -367,10 +365,13 @@ namespace MF {
     /// @param msg Message to process
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::processFrame(const CAN_message_t &msg){
-        Serial.println("Received: " + msg.id);
+        Serial.print(_CANNum);
+        Serial.print(": Received: ");
+        Serial.println(msg.id);
+        //Serial2.println(msg.id);
 
         if (_SDMode){
-
+            //Serial2.println("Write Unknown");
             unknownDataFile.print(millis());
             unknownDataFile.print(",");
             unknownDataFile.print(msg.id);
@@ -397,6 +398,8 @@ namespace MF {
                     _sensor[i].sensor->readFromMsg(msg);
 
                     if (_SDMode){
+                        //Serial2.println("Write Known");
+
                         SensorData temp = _sensor[i].sensor->getDataPackage();
                         
                         knownDataFile.print(millis());

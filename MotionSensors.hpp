@@ -64,19 +64,19 @@ namespace Motion{
     void Accelerometer::readFromMsg(const CAN_message_t& msg){
         conv16_t.bytes[0] = msg.buf[0];
         conv16_t.bytes[1] = msg.buf[1];
-        data[0] = conv16_t.integer/100;
+        data[0] = float(conv16_t.integer)/100;
 
         conv16_t.bytes[0] = msg.buf[2];
         conv16_t.bytes[1] = msg.buf[3];
-        data[1] = conv16_t.integer/100;
+        data[1] = float(conv16_t.integer)/100;
 
         conv16_t.bytes[0] = msg.buf[4];
         conv16_t.bytes[1] = msg.buf[5];
-        data[2] = conv16_t.integer/100;
+        data[2] = float(conv16_t.integer/10);
     }
 
     String Accelerometer::getInfo(){
-        return "X_Acceleration(m/s^2),Y_Acceleration(m/s^2),Z_Acceleration(m/s^2)"
+        return "X_Acceleration(m/s^2),Y_Acceleration(m/s^2),Z_Acceleration(m/s^2)";
     }
 
     void Gyroscope::query(){
@@ -94,19 +94,19 @@ namespace Motion{
     void Gyroscope::readFromMsg(const CAN_message_t& msg){
         conv16_t.bytes[0] = msg.buf[0];
         conv16_t.bytes[1] = msg.buf[1];
-        data[0] = conv16_t.integer/100;
+        data[0] = float(conv16_t.integer)/100;
 
         conv16_t.bytes[0] = msg.buf[2];
         conv16_t.bytes[1] = msg.buf[3];
-        data[1] = conv16_t.integer/100;
+        data[1] = float(conv16_t.integer)/100;
 
         conv16_t.bytes[0] = msg.buf[4];
         conv16_t.bytes[1] = msg.buf[5];
-        data[2] = conv16_t.integer/100;
+        data[2] = float(conv16_t.integer)/100;
     }
 
     String Gyroscope::getInfo(){
-        return "X_Roll(deg/s),Y_Roll(deg/s),Z_Roll(deg/s)"
+        return "X_Roll(deg/s),Y_Roll(deg/s),Z_Roll(deg/s)";
     }
 
 }
