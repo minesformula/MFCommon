@@ -277,8 +277,11 @@ namespace MF {
 
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::flushSD(){
-        knownDataFile.flush();
-        unknownDataFile.flush();
+        knownDataFile.close();
+        unknownDataFile.close();
+
+        knownDataFile = SD.open(knownFilename);
+        unknownDataFile = SD.open(unknownFilename);
     }
 
     /// @brief Enables live telemetry transmissions
