@@ -14,12 +14,6 @@
 namespace MF {
     typedef void (*_callback)(const CAN_message_t &msg);
 
-    union {
-    int integer;
-    float floatingPoint;
-    uint8_t bytes[4];
-    }converter;
-
     template <CAN_DEV_TABLE T>
     class DAQLine {
         public:
@@ -80,7 +74,7 @@ namespace MF {
     FlexCAN_T4<T, RX_SIZE_256, TX_SIZE_16> DAQLine<T>::_DAQLine;
 
     template<CAN_DEV_TABLE T>
-    String DAQLine<T>::_CANNum;
+    String DAQLine<T>::_CANNum = String(T == CAN1 ? "CAN1" : T == CAN2 ? "CAN2" : T == CAN3 ? "CAN3" : "Unknown");
 
     template<CAN_DEV_TABLE T>
     int DAQLine<T>::_baudrate;
@@ -119,20 +113,7 @@ namespace MF {
     uint8_t DAQLine<T>::_sensorNum;
 
     template<CAN_DEV_TABLE T>
-    DAQLine<T>::DAQLine(){
-        DAQLine<T>::_baudrate = 1000000;
-        _sensorNum = 0;
-
-        MF::SensorFactory::load();
-
-        if (T == CAN1){
-            _CANNum = "CAN1";
-        } else if (T == CAN2){
-            _CANNum = "CAN2";
-        } else if (T == CAN3){
-            _CANNum = "CAN3";
-        } 
-    }
+    DAQLine<T>::DAQLine() : DAQLine(1000000){}
 
     template<CAN_DEV_TABLE T>
     DAQLine<T>::DAQLine(int baudrate){
@@ -140,14 +121,6 @@ namespace MF {
         _sensorNum = 0;
 
         MF::SensorFactory::load();
-
-        if (T == CAN1){
-            _CANNum = "CAN1";
-        } else if (T == CAN2){
-            _CANNum = "CAN2";
-        } else if (T == CAN3){
-            _CANNum = "CAN3";
-        } 
     }
 
     template<CAN_DEV_TABLE T>
@@ -165,14 +138,6 @@ namespace MF {
         _DAQLine.enableFIFO();
         _DAQLine.enableFIFOInterrupt();
         _DAQLine.onReceive(processFrame);
-
-        if (T == CAN1){
-            _CANNum = "CAN1";
-        } else if (T == CAN2){
-            _CANNum = "CAN2";
-        } else if (T == CAN3){
-            _CANNum = "CAN3";
-        } 
     }
 
     /// @brief Creates a sensor at a given CANID
@@ -197,6 +162,7 @@ namespace MF {
             Serial.println("Max Sensors Reached");
             return false;
         }
+        
 
         Serial.print(_CANNum);
         Serial.print(": Creating Sensor at: ");
@@ -220,14 +186,13 @@ namespace MF {
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::update(){
         _DAQLine.events();
-        //Serial2.println("Updating");
     }
 
     /// @brief Enable DAQ style SDCard logging. By default creates files with the current date and time.
     /// @tparam T CANLine
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::SDLoggingMode(){
-        _SDMode = true;
+        SDLoggingMode(!_SDMode);
     }
 
     /// @brief Toggle DAQ style SDCard logging. By default creates files with the current date and time.
@@ -244,15 +209,18 @@ namespace MF {
                 temp.close();
             }
 
+            char CANNum[_CANNum.length() + 1] = {};
+            strcpy(CANNum, _CANNum.c_str());
+
             int i = 0;
-            sprintf(knownFilename, "%slogFile0.data", _CANNum.c_str());
-            sprintf(unknownFilename, "%sFile0.data", _CANNum.c_str());
+            sprintf(knownFilename, "%slogFile0.data", CANNum);
+            sprintf(unknownFilename, "%sFile0.data", CANNum);
 
             while (SD.exists(knownFilename)){
                 i++;
 
-                sprintf(knownFilename, "%slogFile%d.data", _CANNum.c_str(), i);
-                sprintf(unknownFilename, "%sFile%d.data", _CANNum.c_str(), i);
+                sprintf(knownFilename, "%slogFile%d.data", CANNum, i);
+                sprintf(unknownFilename, "%sFile%d.data", CANNum, i);
             }
         
 
@@ -280,8 +248,8 @@ namespace MF {
         knownDataFile.close();
         unknownDataFile.close();
 
-        knownDataFile = SD.open(knownFilename);
-        unknownDataFile = SD.open(unknownFilename);
+        knownDataFile = SD.open(knownFilename, FILE_WRITE);
+        unknownDataFile = SD.open(unknownFilename, FILE_WRITE);
     }
 
     /// @brief Enables live telemetry transmissions
@@ -368,13 +336,8 @@ namespace MF {
     /// @param msg Message to process
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::processFrame(const CAN_message_t &msg){
-        Serial.print(_CANNum);
-        Serial.print(": Received: ");
-        Serial.println(msg.id);
-        //Serial2.println(msg.id);
 
         if (_SDMode){
-            //Serial2.println("Write Unknown");
             unknownDataFile.print(millis());
             unknownDataFile.print(",");
             unknownDataFile.print(msg.id);

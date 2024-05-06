@@ -1,5 +1,6 @@
 #include "Sensor.hpp"
 #include "SensorDefinitions.h"
+#include "Converters.h"
 
 #pragma once
 
@@ -258,11 +259,17 @@ namespace ECU{
     }
 
     void GearStatus::readFromMsg(const CAN_message_t& msg){
-        data[0] = (msg.buf[4] & 0x10 ) << 0x10;
+        converter8Bit.bytes[0] = (msg.buf[6] & 0xF0 ) >> 4;
+
+        if ((converter8Bit.bytes[0] >> 3) == 1){
+            converter8Bit.bytes[0] = 0xF0 | converter8Bit.bytes[0];
+        }
+
+        data[0] = converter8Bit.integer;
     }
 
     String GearStatus::getInfo(){
-        return "NeutralBool";
+        return "Gear";
     }
 
     void BatteryStatus::query(){
