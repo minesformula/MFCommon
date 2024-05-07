@@ -7,8 +7,6 @@
 #include "Sensor.hpp"
 #include "SensorFactory.hpp"
 
-#include <TimeLib.h>
-
 #pragma once
 
 namespace MF {
@@ -129,6 +127,9 @@ namespace MF {
         }
     }
 
+    /// @brief Starts CAN Line operations. Note this will start 
+    /// the processing of interrupts so this should always be the last thing run in your setup.
+    /// @tparam T CANLine
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::begin(){
         _DAQLine.begin();
