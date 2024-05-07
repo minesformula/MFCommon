@@ -22,7 +22,7 @@ namespace MF{
         static void sendReadOut(HardwareSerial &serial);
 
         private:
-        explicit SensorFactory(){load();}
+        inline explicit SensorFactory(){load();}
 
         static identifier types[50];
         static uint8_t numTypes;

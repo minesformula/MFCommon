@@ -21,10 +21,10 @@ class TEMPLATE : public Sensor {
 
     void readFromMsg(const CAN_message_t& msg);
 
-    static String getInfo();
+    static inline String getInfo();
 
-    static Sensor* create(uint8_t num){return new TEMPLATE(num);}
-    static identifier getIdentity()
+    static inline Sensor* create(uint8_t num){return new TEMPLATE(num);}
+    static inline identifier getIdentity()
         {return { .abbr = ABBR_SENSOR_DEF, .constructor = create, .info = getInfo()};}
 };
 
@@ -62,17 +62,17 @@ class Sensor{
     virtual void query() = 0;
     virtual void query(uint8_t pin){data[0]=analogRead(pin);}
 
-    float getData();
-    float getData(uint8_t position);
+    inline float getData(){return data[0];};
+    inline float getData(uint8_t position);
     SensorData getDataPackage(){ return {.abbr=abbr, .sensorNum=num, .data=data}; };
 
     virtual CAN_message_t writeToMsg() = 0;
     virtual void readFromMsg(const CAN_message_t& msg) = 0;
 
-    String getAbbreviation(){return abbr;}
+    inline String getAbbreviation(){return abbr;}
 
-    uint8_t getNumber(){return num;}
-    void setNumber(uint8_t newNumber){this->num = newNumber;}
+    inline uint8_t getNumber(){return num;}
+    inline void setNumber(uint8_t newNumber){this->num = newNumber;}
 
     protected:
     String abbr;
@@ -89,11 +89,6 @@ Sensor::Sensor(String abbr, uint8_t number){
     for (int i = 0; i < DATA_SIZE; i++){
         this->data[i] = 0;
     }
-}
-
-
-float Sensor::getData(){
-    return data[0];
 }
 
 float Sensor::getData(uint8_t position){

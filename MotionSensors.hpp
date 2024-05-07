@@ -22,10 +22,10 @@ namespace Motion{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        static String getInfo();
+        static inline String getInfo();
 
-        static Sensor* create(uint8_t num){return new Accelerometer(num);}
-        static identifier getIdentity()
+        static inline Sensor* create(uint8_t num){return new Accelerometer(num);}
+        static inline identifier getIdentity()
             {return { .abbr = ACCELEROMETER, .constructor = create, .info = getInfo()};}
     };
 
@@ -42,10 +42,10 @@ namespace Motion{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        static String getInfo();
+        static inline String getInfo();
 
-        static Sensor* create(uint8_t num){return new Gyroscope(num);}
-        static identifier getIdentity()
+        static inline Sensor* create(uint8_t num){return new Gyroscope(num);}
+        static inline identifier getIdentity()
             {return { .abbr = GYROSCOPE, .constructor = create, .info = getInfo()};}
     };
 

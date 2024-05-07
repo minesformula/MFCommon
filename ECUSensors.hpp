@@ -19,10 +19,10 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        static String getInfo();
+        static inline String getInfo();
 
-        static Sensor* create(uint8_t num){return new EngineStatus(num);}
-        static identifier getIdentity()
+        static inline Sensor* create(uint8_t num){return new EngineStatus(num);}
+        static inline identifier getIdentity()
             {return { .abbr = ENGINE_STATUS, .constructor = create, .info = getInfo()};}
     };
 
@@ -41,10 +41,10 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        static String getInfo();
+        static inline String getInfo();
 
-        static Sensor* create(uint8_t num){return new PumpStatus(num);}
-        static identifier getIdentity()
+        static inline Sensor* create(uint8_t num){return new PumpStatus(num);}
+        static inline identifier getIdentity()
             {return { .abbr = PUMP_STATUS, .constructor = create, .info = getInfo()};}
     };
 
@@ -62,10 +62,10 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        static String getInfo();
+        static inline String getInfo();
 
-        static Sensor* create(uint8_t num){return new GearStatus(num);}
-        static identifier getIdentity()
+        static inline Sensor* create(uint8_t num){return new GearStatus(num);}
+        static inline identifier getIdentity()
             {return { .abbr = GEAR_STATUS, .constructor = create, .info = getInfo()};}
     };
 
@@ -83,10 +83,10 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        static String getInfo();
+        static inline String getInfo();
 
-        static Sensor* create(uint8_t num){return new BatteryStatus(num);}
-        static identifier getIdentity()
+        static inline Sensor* create(uint8_t num){return new BatteryStatus(num);}
+        static inline identifier getIdentity()
             {return { .abbr = BATTERY_STATUS, .constructor = create, .info = getInfo()};}
     };
 
@@ -103,10 +103,10 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        static String getInfo();
+        static inline String getInfo();
 
-        static Sensor* create(uint8_t num){return new ThrottleStatus(num);}
-        static identifier getIdentity()
+        static inline Sensor* create(uint8_t num){return new ThrottleStatus(num);}
+        static inline identifier getIdentity()
             {return { .abbr = THROTTLE_STATUS, .constructor = create, .info = getInfo()};}
     };
 
@@ -123,10 +123,10 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        static String getInfo();
+        static inline String getInfo();
 
-        static Sensor* create(uint8_t num){return new  EngineRuntimeStats(num);}
-        static identifier getIdentity()
+        static inline Sensor* create(uint8_t num){return new  EngineRuntimeStats(num);}
+        static inline identifier getIdentity()
             {return { .abbr = ENGINE_RUNTIME, .constructor = create, .info = getInfo()};}
     };
 
@@ -143,10 +143,10 @@ namespace ECU{
 
     void readFromMsg(const CAN_message_t& msg);
 
-    static String getInfo();
+    static inline String getInfo();
 
-    static Sensor* create(uint8_t num){return new BrakeStatus(num);}
-    static identifier getIdentity()
+    static inline Sensor* create(uint8_t num){return new BrakeStatus(num);}
+    static inline identifier getIdentity()
         {return { .abbr = BRAKE_STATUS, .constructor = create, .info = getInfo()};}
     };
 
@@ -163,10 +163,10 @@ namespace ECU{
 
         void readFromMsg(const CAN_message_t& msg);
 
-        static String getInfo();
+        static inline String getInfo();
 
-        static Sensor* create(uint8_t num){return new EngineTemp(num);}
-        static identifier getIdentity()
+        static inline Sensor* create(uint8_t num){return new EngineTemp(num);}
+        static inline identifier getIdentity()
             {return { .abbr = ENGINE_TEMPERATURE, .constructor = create, .info = getInfo()};}
     };
 

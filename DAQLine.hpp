@@ -27,25 +27,24 @@ namespace MF {
         static bool addSensor(Sensor* sensor, uint32_t ID);
 
         static void writeMsg(const CAN_message_t &msg);
-        static void update();
+        inline static void update();
 
-        static void SDLoggingMode();
+        inline static void SDLoggingMode();
         static void SDLoggingMode(bool set);
 
         static void flushSD();
 
         static void enableLiveTelemetry(HardwareSerial &radio);
 
-        static void enableDynamicSensors();
-        static void enableDynamicSensors(uint32_t receiverID);
+        inline static void enableDynamicSensors();
+        inline static void enableDynamicSensors(uint32_t receiverID);
 
         static void sendReadOut(HardwareSerial &serial);
         static void sendReadOut(HardwareSerial *serial, Sensor* sensor);
 
         private:
         static void processFrame(const CAN_message_t &msg);
-
-        static void writeBytes(File &filename, int size, uint8_t* buffer);
+        static void logFrame(const CAN_message_t &msg);
 
         static FlexCAN_T4<T, RX_SIZE_256, TX_SIZE_16> _DAQLine;
         static String _CANNum;
@@ -179,6 +178,10 @@ namespace MF {
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::writeMsg(const CAN_message_t &msg){
         _DAQLine.write(msg);
+
+        if(_SDMode){
+            logFrame(msg);
+        }
     }
 
     /// @brief Check CAN line for new messages
@@ -201,6 +204,8 @@ namespace MF {
     template<CAN_DEV_TABLE T>
     void DAQLine<T>::SDLoggingMode(bool set){
         if (set){
+
+            _DAQLine.onTransmit(logFrame);
 
             if (!SD.exists(VERSION)){
                 File temp = SD.open(VERSION, FILE_WRITE);
@@ -338,20 +343,7 @@ namespace MF {
     void DAQLine<T>::processFrame(const CAN_message_t &msg){
 
         if (_SDMode){
-            unknownDataFile.print(millis());
-            unknownDataFile.print(",");
-            unknownDataFile.print(msg.id);
-            unknownDataFile.print(",");
-
-            for(size_t dataPos = 0; dataPos < 8; dataPos++){
-                unknownDataFile.print(msg.buf[dataPos]);
-
-                if(dataPos != 7){
-                    unknownDataFile.print(",");
-                }
-            }
-
-            unknownDataFile.println();
+            logFrame(msg);
         }
 
         if (_dynamicMode && _initializerID == msg.id){
@@ -396,18 +388,24 @@ namespace MF {
         }
     }
 
-    /// @brief Write given bytes buffer to a given file
+    /// @brief Logs a CAN message to the CANLine datafile
     /// @tparam T CANLine
-    /// @param file SDCard File to be written to
-    /// @param size Buffer size
-    /// @param buffer Buffer containing bytes to write to the file
+    /// @param msg Message to log
     template<CAN_DEV_TABLE T>
-    void DAQLine<T>::writeBytes(File &file, int size, uint8_t* buffer){
+    void DAQLine<T>::logFrame(const CAN_message_t& msg){
+        unknownDataFile.print(millis());
+        unknownDataFile.print(",");
+        unknownDataFile.print(msg.id);
+        unknownDataFile.print(",");
 
-        for (int i = 0; i < size; i++){
-            file.write(buffer[i]);
+        for(size_t dataPos = 0; dataPos < 8; dataPos++){
+            unknownDataFile.print(msg.buf[dataPos]);
+
+            if(dataPos != 7){
+                unknownDataFile.print(",");
+            }
         }
 
-        file.println();
+        unknownDataFile.println();
     }
 }
